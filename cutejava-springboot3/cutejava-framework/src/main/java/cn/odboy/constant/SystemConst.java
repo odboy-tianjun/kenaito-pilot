@@ -46,6 +46,6 @@ public interface SystemConst {
   String SYMBOL_AT = "@";
   String PROPERTY_OS_NAME = "os.name";
   String OS_NAME_WINDOWS = "Windows";
-  String CURRENT_APP_NAME = "cutejava";
-  String CURRENT_APP_TITLE = "CuteJava";
+  String CURRENT_APP_NAME = "kenaito-pilot";
+  String CURRENT_APP_TITLE = "Pilot自动化运维平台";
 }

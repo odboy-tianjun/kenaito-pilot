@@ -29,7 +29,7 @@ export default {
   props: {
     title: {
       type: String,
-      required: true,
+      required: false,
       default: '默认标题'
     },
     width: {
@@ -61,7 +61,7 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .container-form {
   overflow-y: scroll; /* 启用滚动 */
   scrollbar-width: none; /* Firefox */
@@ -72,6 +72,15 @@ export default {
 
 .container-form::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera*/
+}
+
+::v-deep(.el-drawer__header) {
+  padding: 10px;
+  border-bottom: 1px solid #DCDFE6;
+}
+
+::v-deep(.el-drawer__body) {
+  padding: 10px 10px !important;
 }
 </style>
 

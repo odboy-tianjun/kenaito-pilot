@@ -2,6 +2,6 @@
 
 #### 项目简介
 
-基于 CuteJava Spring Boot 3 版本进行二次开发
+基于 CuteJava `SpringBoot 3` 版本进行二次开发。
 
 **账号密码：** `admin / 123456`

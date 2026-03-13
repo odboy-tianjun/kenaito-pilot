@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package cn.odboy.framework.properties.model;
 
 import cn.hutool.core.util.StrUtil;
@@ -26,9 +25,9 @@ import com.wf.captcha.ChineseGifCaptcha;
 import com.wf.captcha.GifCaptcha;
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
-import java.awt.Font;
 import lombok.Getter;
 import lombok.Setter;
+import java.awt.*;
 
 /**
  * 验证码配置
@@ -40,32 +39,26 @@ import lombok.Setter;
 public class UserLoginCaptchaSettingModel extends KitObject {
 
   private CaptchaCodeEnum codeType;
-
   /**
    * 验证码有效期 分钟
    */
   private Long expiration = 5L;
-
   /**
    * 验证码内容长度
    */
   private int length = 4;
-
   /**
    * 验证码宽度
    */
   private int width = 111;
-
   /**
    * 验证码高度
    */
   private int height = 36;
-
   /**
    * 验证码字体
    */
   private String fontName;
-
   /**
    * 字体大小
    */
@@ -79,29 +72,30 @@ public class UserLoginCaptchaSettingModel extends KitObject {
   public Captcha getCaptcha() {
     Captcha captcha;
     switch (codeType) {
-      case ARITHMETIC -> {
+      case ARITHMETIC:
         // 算术类型 https://gitee.com/whvse/EasyCaptcha
         captcha = new FixedArithmeticCaptcha(width, height);
         // 几位数运算, 默认是两位
         captcha.setLen(length);
-      }
-      case CHINESE -> {
+        break;
+      case CHINESE:
         captcha = new ChineseCaptcha(width, height);
         captcha.setLen(length);
-      }
-      case CHINESE_GIF -> {
+        break;
+      case CHINESE_GIF:
         captcha = new ChineseGifCaptcha(width, height);
         captcha.setLen(length);
-      }
-      case GIF -> {
+        break;
+      case GIF:
         captcha = new GifCaptcha(width, height);
         captcha.setLen(length);
-      }
-      case SPEC -> {
+        break;
+      case SPEC:
         captcha = new SpecCaptcha(width, height);
         captcha.setLen(length);
-      }
-      default -> throw new BadRequestException("验证码配置信息错误！正确配置查看 LoginCodeEnum ");
+        break;
+      default:
+        throw new BadRequestException("验证码配置信息错误！正确配置查看 LoginCodeEnum ");
     }
     if (StrUtil.isNotBlank(fontName)) {
       captcha.setFont(new Font(fontName, Font.PLAIN, fontSize));
@@ -120,15 +114,12 @@ public class UserLoginCaptchaSettingModel extends KitObject {
       // 生成随机数字和运算符
       int n1 = num(1, 10), n2 = num(1, 10);
       int opt = num(3);
-
       // 计算结果
       int res = new int[]{n1 + n2, n1 - n2, n1 * n2}[opt];
       // 转换为字符运算符
       char optChar = "+-x".charAt(opt);
-
       this.setArithmeticString(String.format("%s%c%s=?", n1, optChar, n2));
       this.chars = String.valueOf(res);
-
       return chars.toCharArray();
     }
   }

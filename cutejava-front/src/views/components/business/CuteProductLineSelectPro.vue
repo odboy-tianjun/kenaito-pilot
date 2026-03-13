@@ -6,9 +6,9 @@
  -->
 <template>
   <el-cascader
-    v-model="productLine"
+    v-model="innerValue"
     :disabled="disabled"
-    :options="deptOptions"
+    :options="productLineOptions"
     style="width: 100%"
     placeholder="请选择产品线"
     @change="handleChange"
@@ -18,29 +18,31 @@
 <script>
 
 import { listMetadata } from '@/api/application/cute-product-line-select-pro'
-import CsMessage from '@/utils/elementui/CsMessage'
+import KitMessage from '@/utils/elementui/KitMessage'
 
 export default {
   name: 'CuteProductLineSelectPro',
   props: {
     value: {
       type: Array,
+      required: false,
       default: null
     },
     disabled: {
       type: Boolean,
+      required: false,
       default: false
     }
   },
   data() {
     return {
-      deptOptions: [],
-      productLine: this.value
+      productLineOptions: [],
+      innerValue: this.value
     }
   },
   watch: {
     value(newVal) {
-      this.productLine = newVal
+      this.innerValue = newVal
     }
   },
   created() {
@@ -49,6 +51,9 @@ export default {
   methods: {
     // 递归清理空的children属性
     cleanEmptyChildren(data) {
+      if (!data || !Array.isArray(data)) {
+        return []
+      }
       return data.map(item => {
         const newItem = { ...item }
         if (newItem.children && newItem.children.length > 0) {
@@ -63,20 +68,24 @@ export default {
     },
     fetchDeptData() {
       listMetadata().then(data => {
-        this.deptOptions = this.cleanEmptyChildren(data)
-        // console.error('deptOptions', this.deptOptions)
+        this.productLineOptions = this.cleanEmptyChildren(data)
       }).catch(error => {
         console.error('获取部门数据失败:', error)
-        CsMessage.Error('获取部门数据失败')
+        KitMessage.Error('获取部门数据失败')
       })
     },
     handleChange(value) {
-      this.productLine = value
+      this.innerValue = value
       // console.error('value', value)
       // 绑定change事件
       this.$emit('change', value)
       // 绑定form value
       this.$emit('input', value)
+    },
+    resetField() {
+      this.innerValue = null
+      this.$emit('change', null)
+      this.$emit('input', null)
     }
   }
 }

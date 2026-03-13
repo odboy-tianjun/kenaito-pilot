@@ -3,21 +3,6 @@ server:
   http2:
     # 启用 HTTP/2 支持，提升传输效率
     enabled: true
-  undertow:
-    threads:
-      # 工作线程数，默认设置为io-threads * 8。如果你的应用程序有很多同步阻塞操作，可以适当增加这个值
-      worker: 8
-      # 设置IO线程数, 它主要执行非阻塞的任务,它们会负责多个连接, 默认设置每个CPU核心一个线程
-      # 阻塞任务线程池, 当执行类似servlet请求阻塞操作, undertow会从这个线程池中取得线程,它的值设置取决于系统的负载
-      io: 4
-    # 设置为true以使用直接内存（堆外内存）来存储缓冲区。这可以减少垃圾回收的开销。
-    direct-buffers: true
-    # 以下的配置会影响buffer,这些buffer会用于服务器连接的IO操作,有点类似netty的池化内存管理
-    # 每块buffer的空间大小,越小的空间被利用越充分
-    buffer-size: 1024
-    accesslog:
-      # 关闭日志
-      enabled: false
   compression:
     # 启用 GZIP 压缩，减少传输数据量
     enabled: true
@@ -68,7 +53,7 @@ spring:
       db-type: com.alibaba.druid.pool.DruidDataSource
       # sql监控
       driverClassName: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://127.0.0.1:23306/cutejava?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://127.0.0.1:23306/cutejava?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
       username: root
       password: kd123456
       # 初始连接数，建议设置为与最小空闲连接数相同
@@ -198,14 +183,19 @@ app:
     queue-capacity: 50
   # oss
   oss:
-    max-size: 100
+    max-size: 10
     minio:
-      endpoint: http://127.0.0.1:9000
+      endpoint: https://oss.odboy.cn
       bucketName: cutejava
-      accessKey: 8o5oVzqvKby5TzaGcfmx
-      secretKey: 8BiK5UbmvXGJNVQ98CGiohHzT1N1FMRZqHRdJllj
+      accessKey: 74rgxZtiYtOzsY9U8W9F
+      secretKey: 7d1BiBlfFQDBHKfwAWjF18TLUMjbd9VbSgnncsTw
   captcha:
     expireTime: 300
+  # 序列化白名单
+  serial-white-list:
+    - "org.springframework"
+    - "cn.odboy.system.dal.dataobject"
+    - "cn.odboy.system.dal.model"
 # debug
 #debug: true
 # 日志配置

@@ -16,7 +16,6 @@
 package cn.odboy.system.dal.mysql;
 
 import cn.odboy.system.dal.dataobject.SystemJobTb;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -28,22 +27,4 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface SystemJobMapper extends BaseMapper<SystemJobTb> {
 
-  /**
-   * 根据岗位名称查询岗位是否存在 -> TestPassed
-   */
-  default boolean existJobWithName(String name) {
-    LambdaQueryWrapper<SystemJobTb> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SystemJobTb::getName, name);
-    return exists(wrapper);
-  }
-
-  /**
-   * 根据岗位名称和岗位id查询岗位是否存在 -> TestPassed
-   */
-  default boolean existJobWithNameNeSelf(String name, Long currentJobId) {
-    LambdaQueryWrapper<SystemJobTb> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SystemJobTb::getName, name);
-    wrapper.ne(SystemJobTb::getId, currentJobId);
-    return exists(wrapper);
-  }
 }

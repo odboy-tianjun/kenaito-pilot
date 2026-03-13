@@ -20,15 +20,6 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -40,6 +31,15 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Component
 public class KitRedisHelper {
@@ -106,6 +106,7 @@ public class KitRedisHelper {
    * @param pattern key
    * @return /
    */
+  @SuppressWarnings("all")
   public List<String> scan(String pattern) {
     ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
     RedisConnectionFactory factory = redisTemplate.getConnectionFactory();
@@ -133,6 +134,7 @@ public class KitRedisHelper {
    * @param size       每页数目
    * @return /
    */
+  @SuppressWarnings("all")
   public List<String> findKeysForPage(String patternKey, int page, int size) {
     ScanOptions options = ScanOptions.scanOptions().match(patternKey).build();
     RedisConnectionFactory factory = redisTemplate.getConnectionFactory();
@@ -207,12 +209,12 @@ public class KitRedisHelper {
    *
    * @param pattern /
    */
+  @SuppressWarnings("all")
   public void scanDel(String pattern) {
     ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
     try (Cursor<byte[]> cursor = redisTemplate.executeWithStickyConnection(connection -> {
       try {
-        return (Cursor<byte[]>) new ConvertingCursor<>(
-            connection.scan(options), redisTemplate.getKeySerializer()::deserialize);
+        return (Cursor<byte[]>) new ConvertingCursor<>(connection.scan(options), redisTemplate.getKeySerializer()::deserialize);
       } catch (Exception e) {
         throw new RuntimeException("Redis scan operation failed", e);
       }
@@ -259,13 +261,11 @@ public class KitRedisHelper {
       return null;
     }
     // 如果 value 不是目标类型, 则尝试将其反序列化为 clazz 类型
-    if (!clazz.isInstance(value)) {
-      return JSON.parseObject(value.toString(), clazz);
-    } else if (clazz.isInstance(value)) {
+    boolean isInstance = clazz.isInstance(value);
+    if (isInstance) {
       return clazz.cast(value);
-    } else {
-      return null;
     }
+    return JSON.parseObject(value.toString(), clazz);
   }
 
   /**
@@ -628,7 +628,7 @@ public class KitRedisHelper {
   public long setRemove(String key, Object... values) {
     try {
       Long count = redisTemplate.opsForSet().remove(key, values);
-      return count;
+      return count == null ? 0 : count;
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       return 0;

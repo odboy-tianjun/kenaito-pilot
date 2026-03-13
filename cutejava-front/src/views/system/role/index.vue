@@ -68,7 +68,7 @@
     </el-dialog>
     <el-row :gutter="15">
       <!--角色管理-->
-      <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="17" style="margin-bottom: 10px">
+      <el-col :span="18" style="margin-bottom: 10px">
         <el-card class="box-card" shadow="never">
           <div slot="header" class="clearfix">
             <span class="role-span">角色列表</span>
@@ -87,7 +87,7 @@
             <el-table-column prop="dataScope" label="数据权限" />
             <el-table-column prop="level" label="角色级别" />
             <el-table-column :show-overflow-tooltip="true" prop="description" label="描述">
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 {{ scope.row.description == null ? '-' : scope.row.description }}
               </template>
             </el-table-column>
@@ -99,7 +99,7 @@
               align="center"
               fixed="right"
             >
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 <udOperation
                   v-if="scope.row.level >= level"
                   :data="scope.row"
@@ -113,7 +113,7 @@
         </el-card>
       </el-col>
       <!-- 菜单授权 -->
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="7">
+      <el-col :span="6">
         <el-card class="box-card" shadow="never">
           <div slot="header" class="clearfix">
             <el-tooltip class="item" effect="dark" content="选择指定角色分配菜单" placement="top">
@@ -153,7 +153,7 @@
 <script>
 import crudRoles from '@/api/system/role'
 import { searchDept, searchDeptTree } from '@/api/system/dept'
-import { listChildMenuSetByMenuId, listMenuByPid } from '@/api/system/menu'
+import { listChildMenuSetByMenuId, listRoleMenuByPid } from '@/api/system/menu'
 import CRUD, { crud, form, header, presenter } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
@@ -197,7 +197,7 @@ export default {
   methods: {
     getMenuDatas(node, resolve) {
       setTimeout(() => {
-        listMenuByPid(node.data.id ? node.data.id : 0).then(res => {
+        listRoleMenuByPid(node.data.id ? node.data.id : 0).then(res => {
           resolve(res)
         })
       }, 100)

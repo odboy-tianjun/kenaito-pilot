@@ -15,10 +15,10 @@
  */
 package cn.odboy.framework.context;
 
+import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
@@ -51,6 +51,7 @@ public class KitSpringBeanHolder implements ApplicationContextAware, DisposableB
   /**
    * 从静态变量applicationContext中取得Bean, 自动转型为所赋值对象的类型.
    */
+  @SuppressWarnings("all")
   public static <T> T getBean(String name) {
     assertContextInjected();
     return (T) applicationContext.getBean(name);
@@ -135,9 +136,10 @@ public class KitSpringBeanHolder implements ApplicationContextAware, DisposableB
   }
 
   @Override
-  public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+  public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
     if (KitSpringBeanHolder.applicationContext != null) {
-      log.warn("SpringContextHolder中的ApplicationContext被覆盖, 原有ApplicationContext为:{}", KitSpringBeanHolder.applicationContext);
+      log.warn("SpringContextHolder中的ApplicationContext被覆盖, 原有ApplicationContext为:{}",
+          KitSpringBeanHolder.applicationContext);
     }
     KitSpringBeanHolder.applicationContext = applicationContext;
     if (addCallback) {
@@ -162,7 +164,7 @@ public class KitSpringBeanHolder implements ApplicationContextAware, DisposableB
      * @return /
      */
     default String getCallBackName() {
-      return Thread.currentThread().getId() + ":" + this.getClass().getName();
+      return Thread.currentThread().threadId() + ":" + this.getClass().getName();
     }
   }
 }

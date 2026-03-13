@@ -23,13 +23,13 @@
 <script>
 import { mapGetters } from 'vuex'
 import { getToken } from '@/utils/auth'
-import CsMessage from '@/utils/elementui/CsMessage'
+import KitMessage from '@/utils/elementui/KitMessage'
 
 export default {
   name: 'CuteFileUpload',
   props: {
     value: {
-      type: Object,
+      type: String,
       required: true,
       default: null
     },
@@ -59,7 +59,7 @@ export default {
       let isLt2M = true
       isLt2M = file.size / 1024 ** 2 < 100
       if (!isLt2M) {
-        this.$message.error('上传文件大小不能超过 100MB')
+        KitMessage.Error('上传文件大小不能超过 100MB')
         return false
       }
       return isLt2M
@@ -70,16 +70,24 @@ export default {
       // console.error('response', response)
       // console.error('file', file)
       // console.error('fileList', fileList)
-      this.value.fileUrl = response
       // 绑定on-success事件
       this.$emit('on-success', response, file, fileList)
+      this.$emit('change', response)
+      this.$emit('input', response)
     },
     // 监听上传失败
     handleError(e, file, fileList) {
       const msg = JSON.parse(e.message)
-      CsMessage.Error(msg.message)
+      KitMessage.Error(msg.message)
       // 绑定on-error事件
       this.$emit('on-error', e, file, fileList)
+      this.$emit('change', null)
+      this.$emit('input', null)
+    },
+    resetField() {
+      this.$refs.upload.clearFiles()
+      this.$emit('change', null)
+      this.$emit('input', null)
     }
   }
 }

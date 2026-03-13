@@ -1,5 +1,5 @@
 <!--
- * 文字超链接
+ * 文字链接
  * @author odboy
  * @email tianjun@odboy.cn
  * @created 2025-08-26
@@ -10,6 +10,7 @@
     :underline="false"
     :href="href"
     target="_blank"
+    :disabled="disabled"
   >{{ title }}</el-link>
 </template>
 
@@ -26,7 +27,12 @@ export default {
     href: {
       type: String,
       required: true,
-      default: 'https://github.com/odboy-tianjun'
+      default: 'https://gitee.com/odboy-tianjun'
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   }
 }

@@ -8,8 +8,10 @@
     "dev": "vue-cli-service serve",
     "dev-win": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
     "dev-linux": "export NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
+    "build:dev": "vue-cli-service build --mode development",
     "build:stage": "vue-cli-service build --mode staging",
-    "build:prod": "vue-cli-service build",
+    "build:prod": "vue-cli-service build --mode production",
+    "build:production": "vue-cli-service build",
     "preview": "node build/index.js --preview",
     "lint": "eslint --ext .js,.vue src",
     "test:unit": "jest --clearCache && vue-cli-service test:unit",
@@ -29,16 +31,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/odboy-tianjun/cutejava.git"
+    "url": "https://gitee.com/odboy-tianjun/cutejava.git"
   },
   "bugs": {
-    "url": "https://github.com/odboy-tianjun/cutejava/issues"
+    "url": "https://gitee.com/odboy-tianjun/cutejava/issues"
   },
   "dependencies": {
     "@riophae/vue-treeselect": "^0.4.0",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^1.0.2",
-    "axios": "1.12.0",
+    "axios": "1.13.5",
     "clipboard": "2.0.4",
     "codemirror": "^5.49.2",
     "core-js": "^2.6.12",

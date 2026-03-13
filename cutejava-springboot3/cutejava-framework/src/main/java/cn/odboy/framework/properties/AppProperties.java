@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package cn.odboy.framework.properties;
 
 import cn.odboy.framework.properties.model.CaptchaModel;
 import cn.odboy.framework.properties.model.ContentRsaEncodeSettingModel;
 import cn.odboy.framework.properties.model.JwtAuthSettingModel;
 import cn.odboy.framework.properties.model.StorageOSSModel;
+import cn.odboy.framework.properties.model.SwaggerApiDocSettingModel;
 import cn.odboy.framework.properties.model.ThreadPoolSettingModel;
 import cn.odboy.framework.properties.model.UserLoginSettingModel;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import java.util.List;
 
 /**
  * 应用配置
@@ -40,9 +41,12 @@ public class AppProperties {
   private ContentRsaEncodeSettingModel rsa;
   private JwtAuthSettingModel jwt;
   private UserLoginSettingModel login;
+  private SwaggerApiDocSettingModel swagger;
   private ThreadPoolSettingModel asyncTaskPool;
   private CaptchaModel captcha;
   private StorageOSSModel oss;
+  /**
+   * 自动识别json对象白名单配置（仅允许解析的包名, 范围越小越安全）<br/> 未配置可能导致, 登录失败, 反复登录等问题
+   */
+  private List<String> serialWhiteList;
 }
-
-

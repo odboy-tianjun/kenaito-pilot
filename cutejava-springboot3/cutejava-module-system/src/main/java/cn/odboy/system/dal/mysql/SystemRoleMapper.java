@@ -16,7 +16,6 @@
 package cn.odboy.system.dal.mysql;
 
 import cn.odboy.system.dal.dataobject.SystemRoleTb;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -30,36 +29,5 @@ import java.util.List;
 @Mapper
 public interface SystemRoleMapper extends BaseMapper<SystemRoleTb> {
 
-  /**
-   * 根据角色id查询角色级别列表
-   *
-   * @param roleIds 角色id
-   * @return /
-   */
   List<Integer> listRoleLevelByRoleIds(@Param("roleIds") List<Long> roleIds);
-
-  /**
-   * 查询角色名称是否存在
-   *
-   * @param name 角色名称
-   * @return /
-   */
-  default boolean existRoleWithName(String name) {
-    LambdaQueryWrapper<SystemRoleTb> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SystemRoleTb::getName, name);
-    return exists(wrapper);
-  }
-
-  /**
-   * 查询角色名称是否存在（排除本身）
-   *
-   * @param name 角色名称
-   * @return /
-   */
-  default boolean existRoleWithNameNeSelf(String name, Long roleId) {
-    LambdaQueryWrapper<SystemRoleTb> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SystemRoleTb::getName, name);
-    wrapper.eq(SystemRoleTb::getId, roleId);
-    return exists(wrapper);
-  }
 }

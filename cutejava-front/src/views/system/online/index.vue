@@ -37,7 +37,7 @@
       @selection-change="crud.selectionChangeHandler"
     >
       <el-table-column type="selection" width="55" />
-      <el-table-column :show-overflow-tooltip="true" prop="uid" label="会话编号" />
+      <!-- <el-table-column :show-overflow-tooltip="true" prop="uid" label="会话编号" /> -->
       <el-table-column prop="userName" label="用户名" />
       <el-table-column prop="nickName" label="用户昵称" />
       <el-table-column prop="dept" label="部门" />
@@ -46,7 +46,7 @@
       <el-table-column prop="browser" label="浏览器" />
       <el-table-column prop="loginTime" label="登录时间" />
       <el-table-column label="操作" width="70px" fixed="right">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <el-popover
             :ref="scope.$index"
             v-permission="['admin']"

@@ -29,15 +29,15 @@ import 'codemirror/mode/ruby/ruby'
 import 'codemirror/mode/sql/sql'
 import 'codemirror/mode/vue/vue'
 import 'codemirror/mode/xml/xml'
-import CsMessage from '@/utils/elementui/CsMessage'
+import KitMessage from '@/utils/elementui/KitMessage'
 
 const SupportModeList = ['yaml', 'java', 'go', 'swift', 'dockerfile', 'groovy', 'lua', 'perl', 'python', 'ruby', 'sql', 'xml', 'vue']
 export default {
   name: 'CuteCodeEditor',
   props: {
-    content: {
+    value: {
       type: String,
-      required: true,
+      required: false,
       default: ''
     },
     height: {
@@ -45,7 +45,7 @@ export default {
       required: false,
       default: '500px'
     },
-    readOnly: {
+    readonly: {
       type: Boolean,
       required: false,
       default: false
@@ -58,11 +58,11 @@ export default {
   },
   data() {
     return {
-      editor: false
+      editor: null
     }
   },
   watch: {
-    content(newVal, oldVal) {
+    value(newVal, oldVal) {
       const editorValue = this.editor.getValue()
       if (newVal !== editorValue) {
         this.editor.setValue(newVal)
@@ -92,16 +92,18 @@ export default {
         theme: 'darcula'
       })
       this.editor.setSize('auto', this.height)
-      if (this.content) {
-        this.editor.setValue(this.content)
+      if (this.value) {
+        this.editor.setValue(this.value)
       }
-      this.editor.setOption('readOnly', this.readOnly)
+      this.editor.setOption('readOnly', this.readonly)
       this.editor.on('change', cm => {
-        this.$emit('change', cm.getValue())
+        const value = cm.getValue()
+        this.$emit('change', value)
+        this.$emit('input', value)
       })
       return
     }
-    CsMessage.Error('不支持的mode')
+    KitMessage.Error('不支持的mode')
   },
   methods: {
     getValue() {
@@ -118,6 +120,8 @@ export default {
     },
     resetField() {
       this.editor.setValue('')
+      this.$emit('change', '')
+      this.$emit('input', '')
     }
   }
 }

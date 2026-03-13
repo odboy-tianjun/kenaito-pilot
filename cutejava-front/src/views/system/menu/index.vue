@@ -148,31 +148,31 @@
       <el-table-column type="selection" width="55" />
       <el-table-column :show-overflow-tooltip="true" label="菜单标题" width="220px" prop="title" />
       <el-table-column prop="icon" label="图标" align="center" width="60px">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <svg-icon :icon-class="scope.row.icon ? scope.row.icon : ''" />
         </template>
       </el-table-column>
       <el-table-column prop="menuSort" align="center" label="排序">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           {{ scope.row.menuSort }}
         </template>
       </el-table-column>
       <el-table-column :show-overflow-tooltip="true" prop="permission" label="权限标识" />
       <el-table-column :show-overflow-tooltip="true" prop="component" label="组件路径" />
       <el-table-column prop="iFrame" label="外链" width="75px">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <span v-if="scope.row.iFrame">是</span>
           <span v-else>否</span>
         </template>
       </el-table-column>
       <el-table-column prop="cache" label="缓存" width="75px">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <span v-if="scope.row.cache">是</span>
           <span v-else>否</span>
         </template>
       </el-table-column>
       <el-table-column prop="hidden" label="可见" width="75px">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <span v-if="scope.row.hidden">否</span>
           <span v-else>是</span>
         </template>
@@ -185,7 +185,7 @@
         align="center"
         fixed="right"
       >
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <udOperation
             :data="scope.row"
             :permission="permission"
@@ -216,7 +216,7 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import DateRangePicker from '@/components/DateRangePicker'
-import CsMessage from '@/utils/elementui/CsMessage'
+import KitMessage from '@/utils/elementui/KitMessage'
 
 // crud交由presenter持有
 const defaultForm = {
@@ -375,7 +375,7 @@ export default {
       const that = this
       crudMenu.add(data).then(() => {
         setTimeout(() => {
-          CsMessage.Success('复制成功')
+          KitMessage.Success('复制成功')
           that.crud.toQuery()
         }, 1000)
       })

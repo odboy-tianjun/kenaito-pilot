@@ -3,4 +3,6 @@ spring:
     # 激活的环境
     active: dev
 #    active: dev,quartz
-
+gitlab:
+  endpoint: http://219.151.187.115:5000
+  token: xxxxxxxxxxxx

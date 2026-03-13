@@ -34,10 +34,10 @@ import cn.odboy.util.KitClassUtil;
 import cn.odboy.util.KitValidUtil;
 import cn.odboy.util.xlsx.KitExcelExporter;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -58,13 +58,13 @@ public class SystemDeptService {
   private SystemRoleDeptService systemRoleDeptService;
 
   /**
-   * 创建 -> TestPassed
+   * 创建
    *
    * @param args /
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveDept(SystemCreateDeptArgs args) {
-    KitValidUtil.notNull(args);
+    KitValidUtil.isNull(args);
 
     SystemDeptTb record = KitBeanUtil.copyToClass(args, SystemDeptTb.class);
     systemDeptMapper.insert(record);
@@ -73,13 +73,13 @@ public class SystemDeptService {
   }
 
   /**
-   * 编辑 -> TestPassed
+   * 编辑
    *
    * @param args /
    */
   @Transactional(rollbackFor = Exception.class)
   public void updateDeptById(SystemDeptTb args) {
-    KitValidUtil.notNull(args);
+    KitValidUtil.isNull(args);
     // 旧的父部门
     Long oldPid = this.getDeptById(args.getId()).getPid();
     // 新的父部门
@@ -104,7 +104,9 @@ public class SystemDeptService {
     // 查询部门, 和其所有子部门
     Set<SystemDeptTb> depts = this.traverseDeptByIdWithPids(ids);
     // 验证是否被角色或用户关联
-    this.verifyBindRelationByIds(depts);
+    Set<Long> deptIds = depts.stream().map(SystemDeptTb::getId).collect(Collectors.toSet());
+    KitValidUtil.isTrue(systemUserDeptService.countUserByDeptIds(deptIds) > 0, "所选部门存在用户关联，请解除后再试");
+    KitValidUtil.isTrue(systemRoleDeptService.countRoleByDeptIds(deptIds) > 0, "所选部门存在角色关联，请解除后再试");
     for (SystemDeptTb dept : depts) {
       systemDeptMapper.deleteById(dept.getId());
       this.updateDeptSubCnt(dept.getPid());
@@ -112,14 +114,14 @@ public class SystemDeptService {
   }
 
   /**
-   * 更新父节点中子节点数目 -> TestPassed
+   * 更新父节点中子节点数目
    *
    * @param deptId 部门id
    */
   @Transactional(rollbackFor = Exception.class)
   public void updateDeptSubCnt(Long deptId) {
     if (deptId != null) {
-      long count = systemDeptMapper.countDeptByPid(deptId);
+      long count = this.countDeptByPid(deptId);
       systemDeptMapper.updateDeptSubCountById(count, deptId);
     }
   }
@@ -192,7 +194,7 @@ public class SystemDeptService {
    * @return /
    */
   public KitPageResult<SystemDeptVo> searchDeptTree(List<Long> ids, Boolean exclude) {
-    Map<Long, SystemDeptTb> allDeptMap = systemDeptMapper.getAllDeptMap();
+    Map<Long, SystemDeptTb> allDeptMap = this.getAllDeptMap();
     Set<SystemDeptTb> deptSet1 = new LinkedHashSet<>();
     for (Long id : ids) {
       // 同级数据
@@ -206,7 +208,7 @@ public class SystemDeptService {
           }
         }
         // 编辑部门时不显示自己以及自己下级的数据, 避免出现PID数据环形问题
-        depts = depts.stream().filter(i -> !ids.contains(i.getId())).collect(Collectors.toList());
+        depts = depts.stream().filter(i -> !ids.contains(i.getId())).toList();
       }
       deptSet1.addAll(depts);
     }
@@ -214,7 +216,7 @@ public class SystemDeptService {
     // 构建部门树
     Set<SystemDeptVo> trees = new LinkedHashSet<>();
     Set<SystemDeptVo> deptSet = new LinkedHashSet<>();
-    List<String> deptNames = deptList.stream().map(SystemDeptTb::getName).collect(Collectors.toList());
+    List<String> deptNames = deptList.stream().map(SystemDeptTb::getName).toList();
 
     boolean isChild;
     List<SystemDeptVo> systemDeptVos = KitBeanUtil.copyToList(deptList, SystemDeptVo.class);
@@ -247,19 +249,9 @@ public class SystemDeptService {
     return baseResult;
   }
 
-  /**
-   * 验证是否被角色或用户关联
-   *
-   * @param deptSet /
-   */
-  public void verifyBindRelationByIds(Set<SystemDeptTb> deptSet) {
-    Set<Long> deptIds = deptSet.stream().map(SystemDeptTb::getId).collect(Collectors.toSet());
-    if (systemUserDeptService.countUserByDeptIds(deptIds) > 0) {
-      throw new BadRequestException("所选部门存在用户关联，请解除后再试！");
-    }
-    if (systemRoleDeptService.countRoleByDeptIds(deptIds) > 0) {
-      throw new BadRequestException("所选部门存在角色关联，请解除后再试！");
-    }
+  private Map<Long, SystemDeptTb> getAllDeptMap() {
+    LambdaQueryWrapper<SystemDeptTb> wrapper = new LambdaQueryWrapper<>();
+    return systemDeptMapper.selectList(wrapper).stream().collect(Collectors.toMap(SystemDeptTb::getId, i -> i, (m, n) -> m));
   }
 
   /**
@@ -345,28 +337,49 @@ public class SystemDeptService {
    *
    * @param dept       /
    * @param deptList   /
-   * @param allDeptMap 所有部门id与部门的映射关系
+   * @param allDeptMap
    * @return /
    */
   private List<SystemDeptTb> querySuperiorDeptByPid(SystemDeptTb dept, List<SystemDeptTb> deptList, Map<Long, SystemDeptTb> allDeptMap) {
     if (dept.getPid() == null) {
-      deptList.addAll(systemDeptMapper.listRootDept());
+      deptList.addAll(this.listRootDept());
       return deptList;
     }
     deptList.addAll(this.listDeptByPid(dept.getPid()));
     return querySuperiorDeptByPid(allDeptMap.get(dept.getPid()), deptList, allDeptMap);
   }
 
-
+  /**
+   * 查询所有根部门
+   *
+   * @return /
+   */
+  private List<SystemDeptTb> listRootDept() {
+    LambdaQueryWrapper<SystemDeptTb> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNull(SystemDeptTb::getPid);
+    return systemDeptMapper.selectList(wrapper);
+  }
 
   /**
-   * 根据部门id查询部门信息 -> TestPassed
+   * 根据部门id查询部门信息
    *
    * @param id 部门id
    * @return /
    */
   public SystemDeptTb getDeptById(Long id) {
     return systemDeptMapper.selectById(id);
+  }
+
+  /**
+   * 根据父部门id统计数量
+   *
+   * @param pid 父部门id
+   * @return /
+   */
+  private long countDeptByPid(Long pid) {
+    LambdaQueryWrapper<SystemDeptTb> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SystemDeptTb::getPid, pid);
+    return systemDeptMapper.selectCount(wrapper);
   }
 
   /**

@@ -16,7 +16,9 @@
 package cn.odboy.util;
 
 import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import java.util.Calendar;
 import java.util.Date;
 import lombok.experimental.UtilityClass;
 
@@ -128,5 +130,37 @@ public class KitDateUtil {
       result.append("0毫秒");
     }
     return result.toString();
+  }
+
+  /**
+   * 获得当天是周几
+   */
+  public static String getWeekDay() {
+    String[] weekDays = {"星期天", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(new Date());
+    int w = cal.get(Calendar.DAY_OF_WEEK) - 1;
+    if (w < 0) {
+      w = 0;
+    }
+    return weekDays[w];
+  }
+
+  /**
+   * 格式化毫秒时间戳字符串为'yyyy-MM-dd'格式
+   *
+   * @param timestamp 例如：1767196800000
+   * @return 例如：2026-01-01
+   */
+  public static String formatMsTimestamp(String timestamp) {
+    String formatDate;
+    if (timestamp.matches("\\d{13}")) {
+      long ts = Long.parseLong(timestamp);
+      formatDate = DateUtil.format(new Date(ts), DatePattern.NORM_DATE_PATTERN);
+    } else {
+      DateTime dateTime = DateTime.of(timestamp, DatePattern.NORM_DATETIME_PATTERN);
+      formatDate = DateUtil.format(dateTime, DatePattern.NORM_DATE_PATTERN);
+    }
+    return formatDate;
   }
 }

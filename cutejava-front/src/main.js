@@ -9,9 +9,6 @@ import Element from 'element-ui'
 // 数据字典
 import dict from './components/Dict'
 
-// 防止二次提交
-import { preventReClick } from '@/plugins/PreventReClickDirective'
-
 // 一键复制插件
 import VueClipboard from 'vue-clipboard2'
 
@@ -31,11 +28,15 @@ import store from './store'
 import router from './router/routers'
 
 import './assets/icons' // icon
-import './router/index' // permission control
+import './router/index'
+
+// 过滤器
+import * as filters from './utils/filters'
+// 指令
+import * as directives from './utils/directives'
 
 Vue.use(checkPer)
 Vue.use(permission)
-Vue.directive(preventReClick)
 Vue.use(dict)
 Vue.use(VueClipboard)
 Vue.use(Element, {
@@ -44,46 +45,16 @@ Vue.use(Element, {
 
 Vue.component('split-pane', SplitPane)
 
-/**
- * 日期格式化<br/>
- * 例子: <el-tag>{{ scope.row.createTime | dateFormat }}</el-tag>
- */
-Vue.filter('dateFormat', function(originVal) {
-  if (originVal === undefined) {
-    return ''
-  }
-  const dt = new Date(originVal)
-  const y = dt.getFullYear()
-  const m = (dt.getMonth() + 1 + '').padStart(2, '0')
-  const d = (dt.getDate() + '').padStart(2, '0')
-  return `${y}-${m}-${d}`
+// 注册全局过滤器
+// 使用方法：{{ value | 过滤器方法名 }}
+Object.keys(filters).forEach(key => {
+  Vue.filter(key, filters[key])
 })
 
-/**
- * 日期时间格式化
- */
-Vue.filter('dateTimeFormat', function(originVal) {
-  if (originVal === undefined) {
-    return ''
-  }
-  const dt = new Date(originVal)
-  const y = dt.getFullYear()
-  const m = (dt.getMonth() + 1 + '').padStart(2, '0')
-  const d = (dt.getDate() + '').padStart(2, '0')
-  const hh = (dt.getHours() + '').padStart(2, '0')
-  const mm = (dt.getMinutes() + '').padStart(2, '0')
-  const ss = (dt.getSeconds() + '').padStart(2, '0')
-  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
-})
-
-/**
- * 金额格式化
- */
-Vue.filter('priceFormat', function(data) {
-  if (data !== undefined && data != null) {
-    return data.toFixed(2)
-  }
-  return 0.00
+// 注册全局指令
+// 使用方法：<el-button v-指令方法名></el-button>
+Object.keys(directives).forEach(key => {
+  Vue.directive(directives[key])
 })
 
 Vue.config.productionTip = false

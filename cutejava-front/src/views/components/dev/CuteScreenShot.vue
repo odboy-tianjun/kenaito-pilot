@@ -14,10 +14,10 @@
         size="small"
         @click="capture"
       >
-        截图并下载
+        截屏
       </el-button>
     </div>
-    <div id="elementIdSelector" style="padding: 15px">
+    <div id="CuteScreenShot" style="padding: 15px">
       <slot />
     </div>
   </div>
@@ -25,10 +25,9 @@
 
 <script>
 
-import CsMessage from '@/utils/elementui/CsMessage'
-import { FormatDateTimeShortStr } from '@/utils/CsUtil'
+import KitMessage from '@/utils/elementui/KitMessage'
+import { FormatDateTimeShortStr } from '@/utils/KitUtil'
 import html2canvas from 'html2canvas'
-
 export default {
   name: 'CuteScreenShot',
   data() {
@@ -39,9 +38,9 @@ export default {
   methods: {
     async capture() {
       this.capturing = true
-      const element = document.querySelector('#elementIdSelector')
+      const element = document.querySelector('#CuteScreenShot')
       if (!element) {
-        CsMessage.Error('未找到匹配的元素，请检查选择器是否正确')
+        KitMessage.Error('未找到匹配的元素，请检查选择器是否正确')
         this.capturing = false
         return
       }

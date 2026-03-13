@@ -6,7 +6,7 @@
  -->
 <template>
   <el-select
-    v-model="productLine"
+    v-model="innerValue"
     filterable
     clearable
     placeholder="请选择产品线"
@@ -15,7 +15,7 @@
     @change="handleChange"
   >
     <el-option
-      v-for="item in deptOptions"
+      v-for="item in productLineOptions"
       :key="item.value"
       :label="item.label"
       :value="item.value"
@@ -26,29 +26,31 @@
 <script>
 
 import { listMetadata } from '@/api/application/cute-product-line-select'
-import CsMessage from '@/utils/elementui/CsMessage'
+import KitMessage from '@/utils/elementui/KitMessage'
 
 export default {
   name: 'CuteProductLineSelect',
   props: {
     value: {
       type: String,
+      required: false,
       default: null
     },
     disabled: {
       type: Boolean,
+      required: false,
       default: false
     }
   },
   data() {
     return {
-      deptOptions: [],
-      productLine: this.value
+      productLineOptions: [],
+      innerValue: this.value
     }
   },
   watch: {
     value(newVal) {
-      this.productLine = newVal
+      this.innerValue = newVal
     }
   },
   created() {
@@ -57,15 +59,15 @@ export default {
   methods: {
     fetchDeptData() {
       listMetadata().then(data => {
-        this.deptOptions = data
+        this.productLineOptions = data
       }).catch(error => {
         console.error('获取部门数据失败:', error)
-        CsMessage.Error('获取部门数据失败')
+        KitMessage.Error('获取部门数据失败')
       })
     },
     handleChange(value) {
-      this.productLine = value
-      for (const item of this.deptOptions) {
+      this.innerValue = value
+      for (const item of this.productLineOptions) {
         if (item.value === value) {
           this.$emit('detail', item)
           break
@@ -75,6 +77,11 @@ export default {
       this.$emit('change', value)
       // 绑定form value
       this.$emit('input', value)
+    },
+    resetField() {
+      this.innerValue = null
+      this.$emit('change', null)
+      this.$emit('input', null)
     }
   }
 }

@@ -17,9 +17,6 @@ package cn.odboy.system.framework.quartz;
 
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.system.dal.dataobject.SystemQuartzJobTb;
-import cn.odboy.system.dal.model.response.SystemQuartzJobVo;
-import cn.odboy.util.KitBeanUtil;
-import java.util.Date;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
@@ -36,6 +33,13 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.triggers.CronTriggerImpl;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
+/**
+ * 定时任务管理工具（高耦合版）
+ *
+ * @author odboy
+ */
 @Slf4j
 @Component
 public class QuartzManage {
@@ -44,7 +48,7 @@ public class QuartzManage {
   @Resource
   private Scheduler scheduler;
 
-  public void addJob(SystemQuartzJobVo quartzJob) {
+  public void addJob(SystemQuartzJobTb quartzJob) {
     try {
       String uuid = JOB_NAME + quartzJob.getId();
       // 构建job信息
@@ -83,23 +87,23 @@ public class QuartzManage {
    */
   public void updateJobCron(SystemQuartzJobTb quartzJob) {
     try {
-      SystemQuartzJobVo quartzJobVo = KitBeanUtil.copyToClass(quartzJob, SystemQuartzJobVo.class);
-      TriggerKey triggerKey = TriggerKey.triggerKey(JOB_NAME + quartzJobVo.getId());
+      String uuid = JOB_NAME + quartzJob.getId();
+      TriggerKey triggerKey = TriggerKey.triggerKey(uuid);
       CronTrigger trigger = (CronTrigger) scheduler.getTrigger(triggerKey);
       // 如果不存在则创建一个定时任务
       if (trigger == null) {
-        addJob(quartzJobVo);
+        addJob(quartzJob);
         trigger = (CronTrigger) scheduler.getTrigger(triggerKey);
       }
-      CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(quartzJobVo.getCronExpression());
+      CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(quartzJob.getCronExpression());
       trigger = trigger.getTriggerBuilder().withIdentity(triggerKey).withSchedule(scheduleBuilder).build();
       // 重置启动时间
       ((CronTriggerImpl) trigger).setStartTime(new Date());
-      trigger.getJobDataMap().put(SystemQuartzJobTb.JOB_KEY, quartzJobVo);
+      trigger.getJobDataMap().put(SystemQuartzJobTb.JOB_KEY, quartzJob);
       scheduler.rescheduleJob(triggerKey, trigger);
       // 暂停任务
-      if (quartzJobVo.getIsPause()) {
-        pauseJob(quartzJobVo);
+      if (quartzJob.getIsPause()) {
+        pauseJob(quartzJob);
       }
     } catch (Exception e) {
       log.error("更新定时任务失败", e);
@@ -114,7 +118,8 @@ public class QuartzManage {
    */
   public void deleteJob(SystemQuartzJobTb quartzJob) {
     try {
-      JobKey jobKey = JobKey.jobKey(JOB_NAME + quartzJob.getId());
+      String uuid = JOB_NAME + quartzJob.getId();
+      JobKey jobKey = JobKey.jobKey(uuid);
       scheduler.pauseJob(jobKey);
       scheduler.deleteJob(jobKey);
     } catch (Exception e) {
@@ -128,15 +133,16 @@ public class QuartzManage {
    *
    * @param quartzJob /
    */
-  public void resumeJob(SystemQuartzJobVo quartzJob) {
+  public void resumeJob(SystemQuartzJobTb quartzJob) {
     try {
-      TriggerKey triggerKey = TriggerKey.triggerKey(JOB_NAME + quartzJob.getId());
+      String uuid = JOB_NAME + quartzJob.getId();
+      TriggerKey triggerKey = TriggerKey.triggerKey(uuid);
       CronTrigger trigger = (CronTrigger) scheduler.getTrigger(triggerKey);
       // 如果不存在则创建一个定时任务
       if (trigger == null) {
         addJob(quartzJob);
       }
-      JobKey jobKey = JobKey.jobKey(JOB_NAME + quartzJob.getId());
+      JobKey jobKey = JobKey.jobKey(uuid);
       scheduler.resumeJob(jobKey);
     } catch (Exception e) {
       log.error("恢复定时任务失败", e);
@@ -149,7 +155,7 @@ public class QuartzManage {
    *
    * @param quartzJob /
    */
-  public void runJobNow(SystemQuartzJobVo quartzJob) {
+  public void runJobNow(SystemQuartzJobTb quartzJob) {
     try {
       String uuid = JOB_NAME + quartzJob.getId();
       TriggerKey triggerKey = TriggerKey.triggerKey(uuid);
@@ -173,9 +179,10 @@ public class QuartzManage {
    *
    * @param quartzJob /
    */
-  public void pauseJob(SystemQuartzJobVo quartzJob) {
+  public void pauseJob(SystemQuartzJobTb quartzJob) {
     try {
-      JobKey jobKey = JobKey.jobKey(JOB_NAME + quartzJob.getId());
+      String uuid = JOB_NAME + quartzJob.getId();
+      JobKey jobKey = JobKey.jobKey(uuid);
       scheduler.pauseJob(jobKey);
     } catch (Exception e) {
       log.error("定时任务暂停失败", e);

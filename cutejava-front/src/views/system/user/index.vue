@@ -1,10 +1,12 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <!--侧边部门数据-->
-      <cute-dept-tree @node-click="handleNodeClick" />
-      <!--用户数据-->
-      <el-col :xs="15" :sm="18" :md="19" :lg="20" :xl="20">
+      <!-- 侧边部门数据 -->
+      <el-col :span="4">
+        <cute-dept-tree @node-click="handleNodeClick" />
+      </el-col>
+      <!-- 用户数据 -->
+      <el-col :span="20">
         <!--工具栏-->
         <div class="head-container">
           <div v-if="crud.props.searchToggle">
@@ -154,12 +156,12 @@
           <el-table-column :show-overflow-tooltip="true" prop="phone" width="100" label="手机号" />
           <el-table-column :show-overflow-tooltip="true" width="135" prop="email" label="邮箱" />
           <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
-            <template slot-scope="scope">
+            <template v-slot="scope">
               <div>{{ scope.row.dept.name }}</div>
             </template>
           </el-table-column>
           <el-table-column label="状态" align="center" prop="enabled">
-            <template slot-scope="scope">
+            <template v-slot="scope">
               <el-switch
                 v-model="scope.row.enabled"
                 :disabled="user.id === scope.row.id"
@@ -177,7 +179,7 @@
             align="center"
             fixed="right"
           >
-            <template slot-scope="scope">
+            <template v-slot="scope">
               <udOperation
                 :data="scope.row"
                 :permission="permission"
@@ -195,7 +197,7 @@
 
 <script>
 import crudUser from '@/api/system/user'
-import { IsValidPhone } from '@/utils/CsValidateUtil'
+import { IsValidPhone } from '@/utils/KitValidateUtil'
 import { searchDept, searchDeptTree } from '@/api/system/dept'
 import { getCurrentUserRoleLevel, listAllRole } from '@/api/system/role'
 import { searchJob } from '@/api/system/job'

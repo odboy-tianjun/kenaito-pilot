@@ -1,7 +1,3 @@
-<!--<p class="warn-content">-->
-<!--Markdown 基于-->
-<!--<el-link type="primary" href="" target="_blank">MavonEditor</el-link>-->
-<!--</p>-->
 <!--
  * Markdown编辑器
  * @author odboy
@@ -12,8 +8,8 @@
 <template>
   <mavon-editor
     ref="md"
-    v-model="content"
-    :style="`height: + ${height};overflow-y: hidden`"
+    v-model="innerValue"
+    :style="`height: ${height};overflow-y: hidden`"
     :ishljs="true"
     @imgAdd="imgAdd"
     @change="onChange"
@@ -25,7 +21,7 @@
 import { mapGetters } from 'vuex'
 import { mavonEditor } from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
-import { UploadFile } from '@/utils/CsDomUtil'
+import { UploadFile } from '@/utils/KitDomUtil'
 
 const dynamicHeight = 160
 export default {
@@ -34,7 +30,7 @@ export default {
     mavonEditor
   },
   props: {
-    content: {
+    value: {
       type: String,
       required: true,
       default: ''
@@ -42,7 +38,8 @@ export default {
   },
   data() {
     return {
-      height: document.documentElement.clientHeight - dynamicHeight + 'px'
+      height: document.documentElement.clientHeight - dynamicHeight + 'px',
+      innerValue: ''
     }
   },
   computed: {
@@ -50,6 +47,14 @@ export default {
       'imagesUploadApi',
       'baseApi'
     ])
+  },
+  watch: {
+    value(newVal) {
+      this.innerValue = newVal
+    }
+  },
+  beforeDestroy() {
+    window.onresize = null
   },
   mounted() {
     const that = this
@@ -68,12 +73,17 @@ export default {
     },
     onChange(value, render) {
       this.$emit('change', value, render)
+      this.$emit('input', value)
     },
     onSave(value, render) {
       this.$emit('save', value, render)
+      this.$emit('change', value)
+      this.$emit('input', value)
     },
     resetField() {
-      this.content = ''
+      this.innerValue = ''
+      this.$emit('change', '')
+      this.$emit('input', '')
     }
   }
 }

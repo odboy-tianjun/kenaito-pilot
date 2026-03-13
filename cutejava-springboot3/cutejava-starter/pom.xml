@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>cn.odboy</groupId>
-      <artifactId>cutejava-module-system</artifactId>
+      <artifactId>cutejava-module-gitlab</artifactId>
       <version>1.5.2</version>
     </dependency>
   </dependencies>

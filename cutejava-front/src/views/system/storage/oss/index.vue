@@ -81,7 +81,7 @@
       <el-table-column prop="createBy" label="操作人" />
       <el-table-column prop="createTime" label="创建日期" />
       <el-table-column label="操作" fixed="right">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <el-button id="ossFileUrl" type="text" @click="handleCopyFileUrl(scope.row.fileUrl)">复制链接</el-button>
         </template>
       </el-table-column>
@@ -101,7 +101,7 @@ import crudOperation from '@crud/CRUD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
 import Clipboard from 'clipboard'
-import CsMessage from '@/utils/elementui/CsMessage'
+import KitMessage from '@/utils/elementui/KitMessage'
 
 const defaultForm = { id: null }
 export default {
@@ -169,12 +169,12 @@ export default {
       })
       // 复制成功
       clipboard.on('success', (e) => {
-        CsMessage.Success('复制成功')
+        KitMessage.Success('复制成功')
         clipboard.destroy()
       })
-      // //复制失败
+      // 复制失败
       clipboard.on('error', (e) => {
-        CsMessage.Error('复制失败')
+        KitMessage.Error('复制失败')
         clipboard.destroy()
       })
     }

@@ -1,0 +1,14 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-golang-1.25.0
+  tags:
+    - builder
+  before_script:
+    - go version
+  script:
+    - pwd
+  only:
+    - api

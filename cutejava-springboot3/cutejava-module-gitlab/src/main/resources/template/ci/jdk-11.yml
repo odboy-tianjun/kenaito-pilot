@@ -6,7 +6,7 @@ stages:
 
 build:
   stage: build
-  image: maven:3.8.6-openjdk-11
+  image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-maven3-jdk11
   tags:
     - builder
   before_script:

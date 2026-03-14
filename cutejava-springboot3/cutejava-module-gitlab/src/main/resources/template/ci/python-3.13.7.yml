@@ -1,0 +1,14 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-python-3.13.7
+  tags:
+    - builder
+  before_script:
+    - python3 -V
+  script:
+    - pwd
+  only:
+    - api

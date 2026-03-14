@@ -1,0 +1,14 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-nodejs-18.20.8
+  tags:
+    - builder
+  before_script:
+    - node -v
+  script:
+    - pwd
+  only:
+    - api

@@ -1,0 +1,14 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-dotnet-9.0.100
+  tags:
+    - builder
+  before_script:
+    - dotnet --version
+  script:
+    - pwd
+  only:
+    - api

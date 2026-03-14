@@ -310,6 +310,12 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     if (CollUtil.isNotEmpty(pendingPipelineList)) {
       throw new BadRequestException("Runner资源不足，请联系管理员处理");
     }
+    List<Pipeline> canceledPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.CANCELED);
+    if (CollUtil.isNotEmpty(canceledPipelineList)) {
+      for (Pipeline pipeline : canceledPipelineList) {
+        this.deletePipeline(project.getId(), pipeline.getId());
+      }
+    }
     // 理论上只能有一个运行中的
     List<Pipeline> runningPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.RUNNING);
     for (Pipeline pipeline : runningPipelineList) {
@@ -322,6 +328,12 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     return this.createPipeline(project.getId(), branchName, variables);
   }
 
+  /**
+   * 停止指定项目的流水线
+   *
+   * @param projectId  项目id
+   * @param pipelineId 流水线id
+   */
   private void cancelPipelineJobs(@NonNull Long projectId, @NonNull Long pipelineId) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       gitLabApi.getPipelineApi().cancelPipelineJobs(projectId, pipelineId);
@@ -330,6 +342,12 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     }
   }
 
+  /**
+   * 删除指定项目的流水线
+   *
+   * @param projectId  项目id
+   * @param pipelineId 流水线id
+   */
   private void deletePipeline(@NonNull Long projectId, @NonNull Long pipelineId) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       gitLabApi.getPipelineApi().deletePipeline(projectId, pipelineId);

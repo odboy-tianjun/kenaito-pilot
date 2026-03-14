@@ -16,12 +16,17 @@
 package cn.odboy.gitlab;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.gitlab.service.GitlabService;
+import lombok.extern.slf4j.Slf4j;
 import org.gitlab4j.api.models.Pipeline;
+import org.gitlab4j.api.models.PipelineStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import java.util.Date;
 
+@Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class GitlabTests {
 
@@ -45,17 +50,49 @@ public class GitlabTests {
 
   @Test
   public void testCreatePipeline() {
-    Pipeline pipeline = gitlabService.startPipeline("asdasd", "asdasdasda", null);
+    Pipeline pipeline = gitlabService.startPipeline("kenaito-pilot", "main", null);
+
+    Date startedAt = null;
+
     while (true) {
       ThreadUtil.sleep(2000);
       pipeline = gitlabService.getPipelineById(pipeline.getProjectId(), pipeline.getId());
-      System.err.println("getStatus: " + pipeline.getStatus());
-      System.err.println("getDetailedStatus: " + pipeline.getDetailedStatus());
-      System.err.println("getStartedAt: " + pipeline.getStartedAt());
-      System.err.println("getFinishedAt: " + pipeline.getFinishedAt());
-      System.err.println("getDuration: " + pipeline.getDuration());
-      System.err.println("getQueuedDuration: " + pipeline.getQueuedDuration());
-      System.err.println("===============================");
+
+      if (startedAt == null) {
+        startedAt = pipeline.getStartedAt();
+      }
+
+      PipelineStatus status = pipeline.getStatus();
+      Date finishedAt = pipeline.getFinishedAt();
+      Integer duration = pipeline.getDuration();
+      String ref = pipeline.getRef();
+      String source = pipeline.getSource();
+      String webUrl = pipeline.getWebUrl();
+
+      log.info("==============================================================");
+      log.info("getStatus -> 状态: {}", status);
+      log.info("getWebUrl -> 明细URL: {}", webUrl);
+      log.info("getRef -> 关联分支: {}", ref);
+      log.info("getSource -> 来源: {}", source);
+
+      // 执行中
+      if (PipelineStatus.RUNNING.equals(status)) {
+        continue;
+      }
+
+      // 执行失败
+      if (PipelineStatus.FAILED.equals(status)) {
+        log.info("getFinishedAt -> 完成时间: {}", finishedAt);
+        log.info("getDuration -> 持续时长(秒): {}", duration);
+        throw new BadRequestException("流水线执行失败");
+      }
+
+      // 执行成功
+      if (PipelineStatus.SUCCESS.equals(status)) {
+        log.info("getFinishedAt -> 完成时间: {}", finishedAt);
+        log.info("getDuration -> 持续时长(秒): {}", duration);
+        break;
+      }
     }
   }
 }

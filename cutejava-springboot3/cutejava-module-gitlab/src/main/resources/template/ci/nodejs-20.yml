@@ -6,9 +6,9 @@ build:
   image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-nodejs-20.0.0
   tags:
     - builder
+  only:
+    - api
   before_script:
     - node -v
   script:
     - pwd
-  only:
-    - api

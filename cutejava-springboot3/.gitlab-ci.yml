@@ -17,4 +17,3 @@ build:
     - echo "压缩构建产物"
     - find . -type f -name "$CONTEXT_NAME.jar" |xargs -I {} tar -czvf ${CONTEXT_NAME}_${CI_COMMIT_REF_NAME}.tgz {}
     - echo "构建镜像"
-    -

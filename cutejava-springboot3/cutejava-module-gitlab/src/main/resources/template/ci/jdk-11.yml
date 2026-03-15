@@ -9,6 +9,8 @@ build:
   image: registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-maven3-jdk11
   tags:
     - builder
+  only:
+    - api
   before_script:
     - mkdir -p ~/.m2
     - echo "<settings><mirrors><mirror><id>aliyunmaven</id><mirrorOf>central</mirrorOf><name>阿里云公共仓库</name><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>" > ~/.m2/settings.xml
@@ -18,5 +20,3 @@ build:
     - echo "压缩构建产物"
 #    - find . -type f -name "$CONTEXT_NAME.jar" |xargs -I {} tar -czvf ${CONTEXT_NAME}_${CI_COMMIT_REF_NAME}.tgz {}
     - echo "上传构建产物"
-  only:
-    - api

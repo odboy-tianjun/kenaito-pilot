@@ -24,6 +24,7 @@ import org.gitlab4j.api.models.PipelineStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
 import java.util.Date;
 
 @Slf4j
@@ -52,10 +53,27 @@ public class GitlabTests {
   public void testCreatePipeline() {
     Pipeline pipeline = gitlabService.startPipeline("kenaito-pilot", "main", null);
 
-    Date startedAt = null;
-
+    // 判断流水线是否挂起
+    int retryCnt = 5;
+    int waitSeconds = 10;
     while (true) {
-      ThreadUtil.sleep(2000);
+      if (retryCnt < 0) {
+        throw new BadRequestException("Runner资源不足，请联系管理员处理");
+      }
+      ThreadUtil.sleep(waitSeconds * 1000);
+      pipeline = gitlabService.getPipelineById(pipeline.getProjectId(), pipeline.getId());
+      if (!PipelineStatus.RUNNING.equals(pipeline.getStatus())) {
+        retryCnt--;
+        continue;
+      }
+      break;
+    }
+
+    // 流水线启动时间
+    waitSeconds = 2;
+    Date startedAt = null;
+    while (true) {
+      ThreadUtil.sleep(waitSeconds * 1000);
       pipeline = gitlabService.getPipelineById(pipeline.getProjectId(), pipeline.getId());
 
       if (startedAt == null) {

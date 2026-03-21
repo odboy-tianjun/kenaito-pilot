@@ -18,14 +18,16 @@ package cn.odboy.gitlab;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.gitlab.service.GitlabService;
+import cn.odboy.util.KitDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -51,26 +53,53 @@ public class GitlabTests {
 
   @Test
   public void testCreatePipeline() {
-    Pipeline pipeline = gitlabService.startPipeline("kenaito-pilot", "main", null);
+    // 容器镜像服务
+    String criServiceUser = "tianjun@odboy.cn";
+    String criServicePwd = "xx";
+
+    // 项目配置
+    String appName = "kenaito-pilot";
+    String branchName = "main";
+    String envCode = "daily";
+    String versionCode = KitDateUtil.getNowDateTimeStr();
+
+    // 变量构建
+    Map<String, String> variables = new HashMap<>();
+    variables.put("CONTEXT_NAME", appName);
+    variables.put("VERSION_CODE", versionCode);
+    variables.put("ENV_CODE", envCode);
+    variables.put("CRI_SERVICE_USER", criServiceUser);
+    variables.put("CRI_SERVICE_PWD", criServicePwd);
+
+    Pipeline pipeline = gitlabService.startPipeline(appName, branchName, variables);
 
     // 判断流水线是否挂起
-    int retryCnt = 5;
-    int waitSeconds = 10;
+    final int maxRetryCount = 5;
+    final int waitSeconds = 5;
+    int retryCount = 1;
     while (true) {
-      if (retryCnt < 0) {
-        throw new BadRequestException("Runner资源不足，请联系管理员处理");
-      }
+      log.info("检测流水线是否挂起中，最大重试次数：{}，当前重试次数：{}", maxRetryCount, retryCount);
       ThreadUtil.sleep(waitSeconds * 1000);
       pipeline = gitlabService.getPipelineById(pipeline.getProjectId(), pipeline.getId());
-      if (!PipelineStatus.RUNNING.equals(pipeline.getStatus())) {
-        retryCnt--;
-        continue;
+
+      if (PipelineStatus.RUNNING.equals(pipeline.getStatus())) {
+        log.info("流水线运行中");
+        break;
       }
-      break;
+      if (PipelineStatus.FAILED.equals(pipeline.getStatus())) {
+        log.info("流水线执行失败");
+        throw new BadRequestException("流水线执行失败");
+      }
+      if (PipelineStatus.PENDING.equals(pipeline.getStatus())) {
+        log.info("流水线挂起");
+        retryCount++;
+        if (retryCount > maxRetryCount) {
+          throw new BadRequestException("流水线挂起，可能是由于.gitlab-ci.yml配置或者资源不足导致，请联系管理员处理");
+        }
+      }
     }
 
-    // 流水线启动时间
-    waitSeconds = 2;
+    // 运行流水线
     Date startedAt = null;
     while (true) {
       ThreadUtil.sleep(waitSeconds * 1000);

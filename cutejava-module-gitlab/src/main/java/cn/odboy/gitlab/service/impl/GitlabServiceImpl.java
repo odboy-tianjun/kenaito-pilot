@@ -23,6 +23,7 @@ import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.gitlab.config.GitlabProperties;
 import cn.odboy.gitlab.constant.GitlabConst;
 import cn.odboy.gitlab.service.GitlabService;
+import com.alibaba.fastjson2.JSON;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.gitlab4j.api.GitLabApi;
@@ -308,21 +309,31 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     Project project = this.getProjectByName(projectEnglishName);
     List<Pipeline> pendingPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.PENDING);
     if (CollUtil.isNotEmpty(pendingPipelineList)) {
-      throw new BadRequestException("Runner资源不足，请联系管理员处理");
+      log.info("存在挂起的流水线，停止并释放资源");
+      for (Pipeline pipeline : pendingPipelineList) {
+        // 取消任务
+        this.cancelPipelineJobs(project.getId(), pipeline.getId());
+        // 删除流水线
+        this.deletePipeline(project.getId(), pipeline.getId());
+      }
     }
     List<Pipeline> canceledPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.CANCELED);
     if (CollUtil.isNotEmpty(canceledPipelineList)) {
+      log.info("存在取消的任务，释放资源");
       for (Pipeline pipeline : canceledPipelineList) {
         this.deletePipeline(project.getId(), pipeline.getId());
       }
     }
     // 理论上只能有一个运行中的
     List<Pipeline> runningPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.RUNNING);
-    for (Pipeline pipeline : runningPipelineList) {
-      // 停止运行中的
-      this.cancelPipelineJobs(project.getId(), pipeline.getId());
-      // 删除流水线
-      this.deletePipeline(project.getId(), pipeline.getId());
+    if (CollUtil.isNotEmpty(runningPipelineList)) {
+      log.info("存在相同的运行中的流水线，停止并释放资源");
+      for (Pipeline pipeline : runningPipelineList) {
+        // 取消任务
+        this.cancelPipelineJobs(project.getId(), pipeline.getId());
+        // 删除流水线
+        this.deletePipeline(project.getId(), pipeline.getId());
+      }
     }
     // 创建新流水线
     return this.createPipeline(project.getId(), branchName, variables);
@@ -366,7 +377,9 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    */
   private Pipeline createPipeline(@NonNull Long projectId, @NonNull String branchName, Map<String, String> variables) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
-      return gitLabApi.getPipelineApi().createPipeline(projectId, branchName, variables);
+      Pipeline pipeline = gitLabApi.getPipelineApi().createPipeline(projectId, branchName, variables);
+      log.info("创建流水线成功, {}", JSON.toJSONString(pipeline));
+      return pipeline;
     } catch (GitLabApiException e) {
       if (e.getMessage().contains("Pipeline filtered out by workflow rules")) {
         RepositoryFile repositoryFile = this.getRepositoryFile(projectId, ".gitlab-ci.yml", branchName, false);

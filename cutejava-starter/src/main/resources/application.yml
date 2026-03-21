@@ -5,4 +5,4 @@ spring:
 #    active: dev,quartz
 gitlab:
   endpoint: http://219.151.187.115:5000
-  token: vC2mULhUqAJFJ3bTEPFG
+  token: xxxxxx

@@ -55,7 +55,7 @@ public class GitlabTests {
   public void testCreatePipeline() {
     // 容器镜像服务
     String criServiceUser = "tianjun@odboy.cn";
-    String criServicePwd = "xx";
+    String criServicePwd = "xxxxxx";
 
     // 项目配置
     String appName = "kenaito-pilot";

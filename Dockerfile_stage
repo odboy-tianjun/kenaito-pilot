@@ -1,0 +1,5 @@
+FROM registry.cn-shanghai.aliyuncs.com/odboy/kenaito-cicd:runtime-jdk21
+
+ENV APP_NAME=kenaito-pilot
+
+ADD $APP_NAME.tgz .

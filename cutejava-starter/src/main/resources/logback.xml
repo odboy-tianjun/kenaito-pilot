@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds" debug="false">
-  <contextName>CuteJava</contextName>
-  <property name="log.name" value="cutejava"/>
-  <property name="log.home" value="/var/logs"/>
+  <contextName>KenaitoPilot</contextName>
+  <property name="log.name" value="kenaito-pilot"/>
+  <property name="log.home" value="/home/admin/kenaito-pilot/logs"/>
   <property name="log.charset" value="utf-8"/>
   <property name="log.pattern" value="%red(%contextName) - %red(%d{yyyy-MM-dd HH:mm:ss.SSS}) - %green([%thread]) %highlight(%-5level) %boldMagenta(%logger{36}) - %msg%n"/>
 

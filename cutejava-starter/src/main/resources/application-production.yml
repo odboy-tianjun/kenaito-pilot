@@ -30,10 +30,21 @@ spring:
     redis:
       database: ${REDIS_DB:1}
       host: ${REDIS_HOST:127.0.0.1}
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT:26379}
       password: ${REDIS_PWD:kd123456}
       # 连接超时时间
       timeout: 5000
+      # 连接池配置
+      lettuce:
+        pool:
+          # 连接池最大连接数
+          max-active: 30
+          # 连接池最大阻塞等待时间（毫秒），负值表示没有限制
+          max-wait: -1
+          # 连接池中的最大空闲连接数
+          max-idle: 20
+          # 连接池中的最小空闲连接数
+          min-idle: 1
       repositories:
         # 是否启用Redis存储(关闭防止出现 Multiple Spring Data modules found, entering strict repository configuration mode)
         enabled: false
@@ -41,8 +52,8 @@ spring:
     druid:
       db-type: com.alibaba.druid.pool.DruidDataSource
       # sql监控
-      driverClassName: com.p6spy.engine.spy.P6SpyDriver
-      url: jdbc:p6spy:mysql://127.0.0.1:3306/cutejava?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+      driverClassName: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://127.0.0.1:23306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
       username: root
       password: kd123456
       # 初始连接数，建议设置为与最小空闲连接数相同
@@ -143,7 +154,7 @@ app:
   # 登录
   login:
     # 是否限制单用户登录
-    single: false
+    single: true
     # 验证码
     captchaSetting:
       # 验证码类型配置 查看 LoginProperties 类
@@ -198,6 +209,6 @@ logging:
     #    root: debug
     cn.odboy: info
 knife4j:
-  enable: true
+  enable: false
   setting:
     language: zh_cn

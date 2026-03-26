@@ -14,12 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>cn.odboy</groupId>
-            <artifactId>cutejava-pilot-gitlab</artifactId>
-            <version>1.5.2</version>
-        </dependency>
-        <dependency>
-            <groupId>cn.odboy</groupId>
-            <artifactId>cutejava-pilot-kubernetes</artifactId>
+            <artifactId>cutejava-module-pilot</artifactId>
             <version>1.5.2</version>
         </dependency>
     </dependencies>

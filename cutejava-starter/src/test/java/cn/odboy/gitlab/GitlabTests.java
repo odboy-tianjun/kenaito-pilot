@@ -17,9 +17,10 @@ package cn.odboy.gitlab;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.odboy.framework.exception.BadRequestException;
-import cn.odboy.pilot.gitlab.config.GitlabProperties;
-import cn.odboy.pilot.gitlab.core.GitlabPipelineListener;
-import cn.odboy.pilot.gitlab.service.GitlabService;
+import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
+import cn.odboy.gitlab.initializer.GitlabRepository;
+import cn.odboy.gitlab.pipeline.GitlabPipelineListener;
+import cn.odboy.gitlab.service.GitlabSiteConfigService;
 import cn.odboy.util.KitDateUtil;
 import com.alibaba.fastjson2.JSON;
 import lombok.extern.slf4j.Slf4j;
@@ -39,26 +40,28 @@ import java.util.Map;
 public class GitlabTests {
 
   @Autowired
-  private GitlabService gitlabService;
+  private GitlabRepository gitlabRepository;
+  @Autowired
+  private GitlabSiteConfigService gitlabSiteConfigService;
 
   @Test
   public void testCreateProject() {
-    gitlabService.createProject(null, "测试应用", "test", "测试应用描述");
+    gitlabRepository.createProject(null, "测试应用", "test", "测试应用描述");
   }
 
   @Test
   public void testCreateGroup() {
-    gitlabService.createGroup("testgroup3", "测试组描述");
+    gitlabRepository.createGroup("testgroup3", "测试组描述");
   }
 
   @Test
   public void testMergeBranch() {
-    gitlabService.mergeBranch("asdasd", "asdasdasda", "main");
+    gitlabRepository.mergeBranch("asdasd", "asdasdasda", "main");
   }
 
   @Test
   public void testMergeDefaultBranch() {
-    gitlabService.mergeDefaultBranch("asdasd", "asdasdasda");
+    gitlabRepository.mergeDefaultBranch("asdasd", "asdasdasda");
   }
 
   @Test
@@ -81,7 +84,7 @@ public class GitlabTests {
     variables.put("CRI_SERVICE_USER", criServiceUser);
     variables.put("CRI_SERVICE_PWD", criServicePwd);
 
-    Pipeline pipeline = gitlabService.startPipeline(appName, branchName, variables);
+    Pipeline pipeline = gitlabRepository.startPipeline(appName, branchName, variables);
     System.err.println("============== 执行结果 ==============");
     System.err.println(JSON.toJSONString(pipeline));
   }
@@ -107,7 +110,7 @@ public class GitlabTests {
     variables.put("CRI_SERVICE_PWD", criServicePwd);
 
     // 异步启动流水线监听
-    gitlabService.startPipelineWithListener(
+    gitlabRepository.startPipelineWithListener(
         appName, branchName, variables, new GitlabPipelineListener() {
 
           @Override
@@ -140,13 +143,12 @@ public class GitlabTests {
     ThreadUtil.sleep(1000 * 60 * 60);
   }
 
-  @Autowired
-  private GitlabProperties properties;
-
   @Test
   public void testOptimizeGetGroupByName() {
+    GitlabSiteConfigTb masterSiteConfig = gitlabSiteConfigService.getMasterSiteConfig();
+
     String groupName = "test1";
-    try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
+    try (GitLabApi gitLabApi = new GitLabApi(masterSiteConfig.getEndpoint(), masterSiteConfig.getToken())) {
 //      Group group = gitLabApi.getGroupApi().getGroupsStream(groupName).filter(f -> f.getName().equals(groupName)).findFirst().orElse(null);
       Pager<Group> groups = gitLabApi.getGroupApi().getGroups(groupName, 1);
       System.err.println(groups);

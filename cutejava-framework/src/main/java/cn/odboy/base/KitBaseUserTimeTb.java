@@ -18,14 +18,15 @@ package cn.odboy.base;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModelProperty;
-import java.lang.reflect.Field;
-import java.util.Date;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
+
+import java.lang.reflect.Field;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -35,8 +36,7 @@ public class KitBaseUserTimeTb extends KitObject {
   @CreatedBy
   @TableField(fill = FieldFill.INSERT)
   @ApiModelProperty(value = "创建人", hidden = true)
-  private String
-      createBy;
+  private String createBy;
   @LastModifiedBy
   @TableField(fill = FieldFill.INSERT_UPDATE)
   @ApiModelProperty(value = "更新人", hidden = true)

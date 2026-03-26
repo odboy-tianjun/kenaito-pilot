@@ -11,11 +11,7 @@
         <!-- 基础设施 -->
         <module>cutejava-framework</module>
         <module>cutejava-module-system</module>
-        <module>cutejava-pilot-dingtalk</module>
-        <module>cutejava-pilot-gitlab</module>
-        <module>cutejava-pilot-kubernetes</module>
-        <module>cutejava-pilot-cmdb</module>
-        <module>cutejava-pilot-app</module>
+        <module>cutejava-module-pilot</module>
         <module>cutejava-starter</module>
     </modules>
 

@@ -17,6 +17,7 @@
 package cn.odboy;
 
 import cn.odboy.framework.mybatisplus.core.KitMpCmdGenUtil;
+
 import java.util.List;
 
 /**
@@ -26,9 +27,9 @@ public class GenCode {
 
   private static final String ADDR = "127.0.0.1";
   private static final Integer PORT = 3306;
-  private static final String DATABASE_NAME = "cutejava";
+  private static final String DATABASE_NAME = "kenaito_pilot";
   private static final String DATABASE_USER = "root";
-  private static final String DATABASE_PWD = "kd123456";
+  private static final String DATABASE_PWD = "kd123456789";
   private static final String URL = String.format("jdbc:mysql://%s:%s/%s", ADDR, PORT, DATABASE_NAME);
 
   public static void main(String[] args) {
@@ -37,11 +38,25 @@ public class GenCode {
     generator.setDriverClassName("com.mysql.cj.jdbc.Driver");
     generator.setDatabaseUsername(DATABASE_USER);
     generator.setDatabasePassword(DATABASE_PWD);
-    genTaskCode(generator);
+    genK8sCode(generator);
+    genHostCode(generator);
+    genAppCode(generator);
+    genGitlabCode(generator);
   }
 
-  private static void genTaskCode(KitMpCmdGenUtil generator) {
-    generator.gen("task", "",
-        List.of("task_instance_info", "task_instance_detail", "task_template_info", "task_instance_step_detail"));
+  private static void genK8sCode(KitMpCmdGenUtil generator) {
+    generator.gen("kubernetes", "", List.of("k8s_node", "k8s_pod_specs", "k8s_service", "k8s_ingress"));
+  }
+
+  private static void genHostCode(KitMpCmdGenUtil generator) {
+    generator.gen("host", "", List.of("host_info", "host_app"));
+  }
+
+  private static void genAppCode(KitMpCmdGenUtil generator) {
+    generator.gen("app", "", List.of("app_info", "app_user_favorite", "app_role", "app_user_role"));
+  }
+
+  private static void genGitlabCode(KitMpCmdGenUtil generator) {
+    generator.gen("gitlab", "", List.of("gitlab_site_config"));
   }
 }

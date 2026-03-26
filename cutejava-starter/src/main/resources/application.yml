@@ -4,9 +4,7 @@ spring:
     active: daily
 #    active: daily,quartz
 gitlab:
-  endpoint: http://219.151.187.115:21008
-  token: xxxxxx
   pipeline:
-    waitSeconds: 5
-    maxRetryCount: 30
-    maxCheckCount: 1440
+    wait-seconds: 5
+    max-check-count: 1440
+    max-retry-count: 30

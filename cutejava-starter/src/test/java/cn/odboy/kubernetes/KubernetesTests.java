@@ -15,6 +15,7 @@
  */
 package cn.odboy.kubernetes;
 
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.odboy.constant.SystemConst;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * 测试配置：k8s 1.28
+ * kubectl version Client Version: v1.34.1 Kustomize Version: v5.7.1 Server Version: v1.34.1
  */
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -40,22 +41,26 @@ public class KubernetesTests {
     // 先检查是否存在
     Namespace existing = client.namespaces().withName(namespaceName).get();
     if (existing != null) {
-      System.out.println("Namespace already exists: " + namespaceName);
+      log.debug("Namespace already exists: {}", namespaceName);
       return existing;
     }
 
     // 不存在则创建
-    Namespace namespace = new NamespaceBuilder().withNewMetadata().withName(namespaceName).addToLabels("created-by", SystemConst.CURRENT_APP_NAME)
-        .addToAnnotations("created-at", String.valueOf(System.currentTimeMillis())).endMetadata().build();
+    Namespace namespace = new NamespaceBuilder()
+        .withNewMetadata()
+          .withName(namespaceName)
+          .addToLabels("created-by", SystemConst.CURRENT_APP_NAME)
+          .addToAnnotations("created-at", String.valueOf(System.currentTimeMillis()))
+        .endMetadata().build();
 
     try {
       Namespace created = client.namespaces().resource(namespace).create();
-      System.out.println("Namespace created: " + namespaceName);
+      log.debug("Namespace created: {}", namespaceName);
       return created;
     } catch (KubernetesClientException e) {
       // 处理并发创建的情况
       if (e.getCode() == 409) {
-        System.out.println("Namespace was created by another process: " + namespaceName);
+        log.debug("Namespace was created by another process: {}", namespaceName);
         return client.namespaces().withName(namespaceName).get();
       }
       throw e;
@@ -64,8 +69,8 @@ public class KubernetesTests {
 
   @Test
   public void testReadConfig() {
-    String kubeconfigContent = "";
-    Config config = Config.fromKubeconfig(kubeconfigContent);
+    String kubeConfigContent = ResourceUtil.readUtf8Str("classpath:kubernetes/config");
+    Config config = Config.fromKubeconfig(kubeConfigContent);
     try (KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build()) {
       this.createNamespace(client, "test01");
     } catch (Exception e) {

@@ -89,7 +89,7 @@ public interface GitlabService {
   /**
    * 列出所有的分组
    *
-   * @return /
+   * @return 分组列表
    */
-  List<Group> listGroup();
+  List<Group> listGroups();
 }

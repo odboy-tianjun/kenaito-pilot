@@ -128,7 +128,7 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
   }
 
   @Override
-  public List<Group> listGroup() {
+  public List<Group> listGroups() {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       return gitLabApi.getGroupApi().getGroups();
     } catch (GitLabApiException e) {
@@ -295,18 +295,18 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    */
   private Pipeline createPipelineByProjectName(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables) {
     Project project = this.getProjectByName(projectEnglishName);
-    List<Pipeline> pendingPipelineList = this.queryPipelineByStatus(project.getId(), branchName, PipelineStatus.PENDING);
+    List<Pipeline> pendingPipelineList = this.listPipelinesByStatus(project.getId(), branchName, PipelineStatus.PENDING);
     if (CollUtil.isNotEmpty(pendingPipelineList)) {
       log.debug("存在挂起的流水线，停止并释放资源");
       this.cancelAndDeletePipeline(project, true, pendingPipelineList);
     }
-    List<Pipeline> canceledPipelineList = this.queryPipelineByStatus(project.getId(), branchName, PipelineStatus.CANCELED);
+    List<Pipeline> canceledPipelineList = this.listPipelinesByStatus(project.getId(), branchName, PipelineStatus.CANCELED);
     if (CollUtil.isNotEmpty(canceledPipelineList)) {
       log.debug("存在取消的任务，释放资源");
       this.cancelAndDeletePipeline(project, false, canceledPipelineList);
     }
     // 理论上只能有一个运行中的
-    List<Pipeline> runningPipelineList = this.queryPipelineByStatus(project.getId(), branchName, PipelineStatus.RUNNING);
+    List<Pipeline> runningPipelineList = this.listPipelinesByStatus(project.getId(), branchName, PipelineStatus.RUNNING);
     if (CollUtil.isNotEmpty(runningPipelineList)) {
       log.debug("存在相同的运行中的流水线，停止并释放资源");
       this.cancelAndDeletePipeline(project, true, runningPipelineList);
@@ -391,16 +391,16 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    * @param projectId      项目id
    * @param branchName     分支名称
    * @param pipelineStatus 流水线状态
-   * @return /
+   * @return 流水线列表
    */
-  private List<Pipeline> queryPipelineByStatus(@NonNull Long projectId, @NonNull String branchName, @NonNull PipelineStatus pipelineStatus) {
+  private List<Pipeline> listPipelinesByStatus(@NonNull Long projectId, @NonNull String branchName, @NonNull PipelineStatus pipelineStatus) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       PipelineFilter pipelineFilter = new PipelineFilter();
       pipelineFilter.withRef(branchName);
       pipelineFilter.withStatus(pipelineStatus);
       return gitLabApi.getPipelineApi().getPipelines(projectId, pipelineFilter);
     } catch (GitLabApiException e) {
-      throw new BadRequestException("根据状态查询流水线列表");
+      throw new BadRequestException("根据状态查询流水线列表失败");
     }
   }
 
@@ -462,7 +462,7 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    * @return /
    */
   private MergeRequest mergeBranch(@NonNull Long projectId, @NonNull String sourceBranch, @NonNull String targetBranch) {
-    List<MergeRequest> mergeRequests = this.queryOpenedMergeRequestByBranchName(projectId, sourceBranch, targetBranch);
+    List<MergeRequest> mergeRequests = this.listOpenedMergeRequestsByBranchName(projectId, sourceBranch, targetBranch);
     if (CollUtil.isNotEmpty(mergeRequests)) {
       for (MergeRequest request : mergeRequests) {
         this.deleteMergeRequestByIid(request.getProjectId(), request.getIid());
@@ -615,13 +615,14 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
   }
 
   /**
-   * 查询已打开的合并请求
+   * 查询已打开的合并请求列表
    *
    * @param projectId    项目id
    * @param sourceBranch 源分支
    * @param targetBranch 目标分支
+   * @return 合并请求列表
    */
-  private List<MergeRequest> queryOpenedMergeRequestByBranchName(@NonNull Long projectId, @NonNull String sourceBranch, @NonNull String targetBranch) {
+  private List<MergeRequest> listOpenedMergeRequestsByBranchName(@NonNull Long projectId, @NonNull String sourceBranch, @NonNull String targetBranch) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
 //      return gitLabApi.getMergeRequestApi().getMergeRequestsStream(projectId)
 //          .filter(f -> f.getSourceBranch().equals(sourceBranch))

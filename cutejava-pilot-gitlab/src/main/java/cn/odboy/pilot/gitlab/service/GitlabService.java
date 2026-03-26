@@ -75,13 +75,4 @@ public interface GitlabService {
    * @param listener           运行监听
    */
   void startPipelineWithListener(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables, GitlabPipelineListener listener);
-
-  /**
-   * 根据流水线id查询
-   *
-   * @param projectId  项目id
-   * @param pipelineId 流水线id
-   * @return /
-   */
-  Pipeline getPipelineById(Long projectId, Long pipelineId);
 }

@@ -573,7 +573,13 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     }
   }
 
-  @Override
+  /**
+   * 根据流水线id查询
+   *
+   * @param projectId  项目id
+   * @param pipelineId 流水线id
+   * @return /
+   */
   public Pipeline getPipelineById(@NonNull Long projectId, @NonNull Long pipelineId) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       return gitLabApi.getPipelineApi().getPipeline(projectId, pipelineId);

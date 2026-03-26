@@ -13,35 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.gitlab.service.impl;
+package cn.odboy.pilot.gitlab.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.constant.SystemConst;
 import cn.odboy.framework.exception.BadRequestException;
-import cn.odboy.gitlab.config.GitlabProperties;
-import cn.odboy.gitlab.constant.GitlabConst;
-import cn.odboy.gitlab.service.GitlabService;
+import cn.odboy.pilot.gitlab.config.GitlabProperties;
+import cn.odboy.pilot.gitlab.constant.GitlabConst;
+import cn.odboy.pilot.gitlab.core.GitlabPipelineListener;
+import cn.odboy.pilot.gitlab.service.GitlabService;
 import com.alibaba.fastjson2.JSON;
+import jakarta.annotation.Resource;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.GroupParams;
-import org.gitlab4j.api.models.MergeRequest;
-import org.gitlab4j.api.models.MergeRequestParams;
-import org.gitlab4j.api.models.Namespace;
-import org.gitlab4j.api.models.Pipeline;
-import org.gitlab4j.api.models.PipelineFilter;
-import org.gitlab4j.api.models.PipelineStatus;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.RepositoryFile;
-import org.gitlab4j.api.models.Visibility;
+import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.models.*;
+import org.gitlab4j.models.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +48,8 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
 
   @Autowired
   private GitlabProperties properties;
+  @Resource(name = "taskAsync")
+  private ThreadPoolTaskExecutor taskExecutor;
 
   @Override
   public void afterPropertiesSet() {
@@ -78,12 +77,11 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
 
   private Group getGroupByName(@NonNull String groupName) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
-      return gitLabApi.getGroupApi().getGroupsStream(groupName)
-          .filter(f -> f.getName().equals(groupName))
-          .findFirst()
-          .orElse(null);
+//      return gitLabApi.getGroupApi().getGroupsStream(groupName).filter(f -> f.getName().equals(groupName)).findFirst().orElse(null);
+      Pager<Group> groups = gitLabApi.getGroupApi().getGroups(groupName, 1);
+      return groups.current().stream().filter(f -> f.getName().equals(groupName)).findFirst().orElse(null);
     } catch (Exception e) {
-      return null;
+      throw new BadRequestException(e);
     }
   }
 
@@ -149,11 +147,42 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    */
   private MergeRequest getOpenedMergeRequestByBranchName(@NonNull Long projectId, @NonNull String sourceBranch, @NonNull String targetBranch) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
-      return gitLabApi.getMergeRequestApi().getMergeRequestsStream(projectId)
-          .filter(f -> f.getSourceBranch().equals(sourceBranch))
-          .filter(f -> f.getTargetBranch().equals(targetBranch))
-          .filter(f -> "opened".equals(f.getState()))
-          .findFirst().orElse(null);
+//      return gitLabApi.getMergeRequestApi().getMergeRequestsStream(projectId)
+//          .filter(f -> f.getSourceBranch().equals(sourceBranch))
+//          .filter(f -> f.getTargetBranch().equals(targetBranch))
+//          .filter(f -> "opened".equals(f.getState())).findFirst().orElse(null);
+      MergeRequestFilter filter = new MergeRequestFilter();
+      filter.setProjectId(projectId);
+      filter.setSourceBranch(sourceBranch);
+      filter.setTargetBranch(targetBranch);
+      filter.setState(Constants.MergeRequestState.OPENED);
+      filter.setOrderBy(Constants.MergeRequestOrderBy.CREATED_AT);
+      return gitLabApi.getMergeRequestApi().getMergeRequests(filter).stream().findFirst().orElse(null);
+    } catch (GitLabApiException e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+  /**
+   * 查询已打开的合并请求
+   *
+   * @param projectId    项目id
+   * @param sourceBranch 源分支
+   * @param targetBranch 目标分支
+   */
+  private List<MergeRequest> queryOpenedMergeRequestByBranchName(@NonNull Long projectId, @NonNull String sourceBranch, @NonNull String targetBranch) {
+    try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
+//      return gitLabApi.getMergeRequestApi().getMergeRequestsStream(projectId)
+//          .filter(f -> f.getSourceBranch().equals(sourceBranch))
+//          .filter(f -> f.getTargetBranch().equals(targetBranch))
+//          .filter(f -> "opened".equals(f.getState())).toList();
+      MergeRequestFilter filter = new MergeRequestFilter();
+      filter.setProjectId(projectId);
+      filter.setSourceBranch(sourceBranch);
+      filter.setTargetBranch(targetBranch);
+      filter.setState(Constants.MergeRequestState.OPENED);
+      filter.setOrderBy(Constants.MergeRequestOrderBy.CREATED_AT);
+      return gitLabApi.getMergeRequestApi().getMergeRequests(filter);
     } catch (GitLabApiException e) {
       throw new BadRequestException(e);
     }
@@ -196,7 +225,9 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    */
   private Project getProjectByName(@NonNull String projectEnglishName) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
-      return gitLabApi.getProjectApi().getProjectsStream().filter(f -> f.getPath().equals(projectEnglishName)).findFirst().orElse(null);
+//      return gitLabApi.getProjectApi().getProjectsStream().filter(f -> f.getPath().equals(projectEnglishName)).findFirst().orElse(null);
+      Pager<Project> projects = gitLabApi.getProjectApi().getProjects(projectEnglishName, 1);
+      return projects.current().stream().filter(f -> f.getPath().equals(projectEnglishName)).findFirst().orElse(null);
     } catch (GitLabApiException e) {
       throw new BadRequestException(e);
     }
@@ -253,49 +284,175 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
   public MergeRequest mergeBranch(@NonNull String projectEnglishName, @NonNull String sourceBranch, @NonNull String targetBranch) {
     Project project = this.getProjectByName(projectEnglishName);
 
-    MergeRequest mergeRequest = this.getOpenedMergeRequestByBranchName(project.getId(), sourceBranch, targetBranch);
-    if (mergeRequest == null) {
-      mergeRequest = this.createMergeRequest(project.getId(), sourceBranch, targetBranch);
+    List<MergeRequest> mergeRequests = this.queryOpenedMergeRequestByBranchName(project.getId(), sourceBranch, targetBranch);
+    if (CollUtil.isNotEmpty(mergeRequests)) {
+      for (MergeRequest request : mergeRequests) {
+        this.deleteMergeRequestByIid(request.getProjectId(), request.getIid());
+      }
     }
 
-    int maxRetry = 10;
-    while (maxRetry > 0) {
-      maxRetry--;
+    MergeRequest mergeRequest = this.createMergeRequest(project.getId(), sourceBranch, targetBranch);
 
-      ThreadUtil.sleep(5000);
+    GitlabProperties.Pipeline pipeline = properties.getPipeline();
+    long waitSeconds = pipeline.getWaitSeconds();
+    long maxRetryCount = pipeline.getMaxRetryCount();
+
+    int retryCount = 1;
+    while (true) {
+      ThreadUtil.sleep(waitSeconds * 1000);
       mergeRequest = this.getMergeRequestByIid(project.getId(), mergeRequest.getIid());
-//      System.err.println("getState: " + mergeRequest.getState());
-//      System.err.println("getMergeError: " + mergeRequest.getMergeError());
-//      System.err.println("getHasConflicts: " + mergeRequest.getHasConflicts());
-//      System.err.println("getDetailedMergeStatus: " + mergeRequest.getDetailedMergeStatus());
-//      System.err.println("============================");
+      log.debug("getState: {}", mergeRequest.getState());
+      log.debug("getMergeError: {}", mergeRequest.getMergeError());
+      log.debug("getHasConflicts: {}", mergeRequest.getHasConflicts());
+      log.debug("getDetailedMergeStatus: {}", mergeRequest.getDetailedMergeStatus());
 
       // 无变更，不需要合并，删除合并请求
-      int changesCount = Integer.parseInt(mergeRequest.getChangesCount());
+      int changesCount = mergeRequest.getChangesCount() == null ? 0 : Integer.parseInt(mergeRequest.getChangesCount());
       if (changesCount <= 0) {
         this.deleteMergeRequestByIid(project.getId(), mergeRequest.getIid());
         return mergeRequest;
       }
       // 分支已合并
-      if ("merged".equals(mergeRequest.getState())) {
+      if (Constants.MergeRequestState.MERGED.toValue().equals(mergeRequest.getState())) {
         return mergeRequest;
       }
       // 分支存在冲突
-      if ("opened".equals(mergeRequest.getState()) && mergeRequest.getHasConflicts()) {
+      if (Constants.MergeRequestState.OPENED.toValue().equals(mergeRequest.getState()) && mergeRequest.getHasConflicts()) {
         // 在线解决冲突地址 http://219.151.187.115:5000/test1/asdasd/-/merge_requests/7/conflicts
         throw new BadRequestException(String.format("%s 与 %s 存在冲突", sourceBranch, targetBranch));
       }
       // 允许合并
-      if ("opened".equals(mergeRequest.getState())) {
+      if (Constants.MergeRequestState.OPENED.toValue().equals(mergeRequest.getState())) {
         return this.acceptMergeRequest(project.getId(), mergeRequest.getIid());
       }
+
+      retryCount++;
+      if (retryCount > maxRetryCount) {
+        throw new BadRequestException("超过最大重试次数");
+      }
     }
-    throw new BadRequestException("超过最大重试次数");
   }
 
-  private RepositoryFile getRepositoryFile(@NonNull Long id, @NonNull String filePath, @NonNull String branchName, @NonNull Boolean includeContent) {
+  @Override
+  public Pipeline startPipeline(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables) {
+    Pipeline pipeline = this.createPipelineByProjectName(projectEnglishName, branchName, variables);
+    return this.syncListenStatus(pipeline, null);
+  }
+
+  @Override
+  public void startPipelineWithListener(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables, GitlabPipelineListener listener) {
+    Pipeline pipeline = this.createPipelineByProjectName(projectEnglishName, branchName, variables);
+    taskExecutor.execute(() -> GitlabServiceImpl.this.syncListenStatus(pipeline, listener));
+  }
+
+  private Pipeline syncListenStatus(Pipeline pipeline, GitlabPipelineListener listener) {
+    // 判断流水线是否挂起
+    GitlabProperties.Pipeline pipelineConfig = properties.getPipeline();
+    long waitSeconds = pipelineConfig.getWaitSeconds();
+    long maxRetryCount = pipelineConfig.getMaxRetryCount();
+    long maxCheckCount = pipelineConfig.getMaxCheckCount();
+
+    int retryCount = 1;
+    while (true) {
+      log.debug("检测流水线是否挂起中，最大重试次数：{}，当前重试次数：{}", maxRetryCount, retryCount);
+      ThreadUtil.sleep(waitSeconds * 1000);
+      pipeline = this.getPipelineById(pipeline.getProjectId(), pipeline.getId());
+
+      if (PipelineStatus.RUNNING.equals(pipeline.getStatus())) {
+        log.debug("流水线运行中");
+        break;
+      }
+      if (PipelineStatus.FAILED.equals(pipeline.getStatus())) {
+        log.debug("流水线执行失败");
+        if (listener != null) {
+          listener.failed(pipeline);
+        }
+        throw new BadRequestException("流水线执行失败");
+      }
+      if (PipelineStatus.PENDING.equals(pipeline.getStatus())) {
+        log.debug("流水线挂起");
+        retryCount++;
+        if (retryCount > maxRetryCount) {
+          if (listener != null) {
+            listener.pending(pipeline);
+          }
+          throw new BadRequestException("流水线挂起，可能是由于.gitlab-ci.yml配置或者资源不足导致，请联系管理员处理");
+        }
+      }
+    }
+
+    // 运行流水线（最大检查时长2h）
+    int checkCount = 1;
+    Date startedAt = null;
+    while (true) {
+      ThreadUtil.sleep(waitSeconds * 1000);
+      pipeline = this.getPipelineById(pipeline.getProjectId(), pipeline.getId());
+
+      if (startedAt == null) {
+        startedAt = pipeline.getStartedAt();
+      }
+
+      PipelineStatus status = pipeline.getStatus();
+      String ref = pipeline.getRef();
+      String source = pipeline.getSource();
+      String webUrl = pipeline.getWebUrl();
+
+      log.debug("getStatus -> 状态: {}", status);
+      log.debug("getWebUrl -> 明细URL: {}", webUrl);
+      log.debug("getRef -> 关联分支: {}", ref);
+      log.debug("getSource -> 来源: {}", source);
+
+      // 执行中
+      if (PipelineStatus.RUNNING.equals(status)) {
+        if (listener != null) {
+          listener.running(pipeline);
+        }
+        continue;
+      }
+
+      // 执行失败
+      if (PipelineStatus.FAILED.equals(status)) {
+        log.debug("getFinishedAt -> 完成时间: {}", pipeline.getFinishedAt());
+        log.debug("getDuration -> 持续时长(秒): {}", pipeline.getDuration());
+        if (listener != null) {
+          listener.failed(pipeline);
+        }
+        throw new BadRequestException("流水线执行失败");
+      }
+
+      // 执行成功
+      if (PipelineStatus.SUCCESS.equals(status)) {
+        log.debug("getFinishedAt -> 完成时间: {}", pipeline.getFinishedAt());
+        log.debug("getDuration -> 持续时长(秒): {}", pipeline.getDuration());
+        if (listener != null) {
+          listener.success(pipeline);
+        }
+        break;
+      }
+
+      checkCount++;
+      if (checkCount > maxCheckCount) {
+        if (listener != null) {
+          listener.pending(pipeline);
+        }
+        throw new BadRequestException("流水线运行超时，请联系管理员处理");
+      }
+    }
+
+    return pipeline;
+  }
+
+  /**
+   * 获取文件内容
+   *
+   * @param projectId      项目id
+   * @param filePath       文件所在的路径
+   * @param branchName     分支名称
+   * @param includeContent 是否返回文件内容
+   */
+  private RepositoryFile getRepositoryFile(@NonNull Long projectId, @NonNull String filePath, @NonNull String branchName, @NonNull Boolean includeContent) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
-      return gitLabApi.getRepositoryFileApi().getFile(id, filePath, branchName, includeContent);
+      return gitLabApi.getRepositoryFileApi().getFile(projectId, filePath, branchName, includeContent);
     } catch (GitLabApiException e) {
       if ("Not Found".equals(e.getReason())) {
         return null;
@@ -304,39 +461,45 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     }
   }
 
-  @Override
-  public Pipeline startPipeline(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables) {
+  /**
+   * 创建流水线
+   *
+   * @param projectEnglishName 项目英文名称
+   * @param branchName         分支名称
+   * @param variables          运行变量
+   * @return /
+   */
+  private Pipeline createPipelineByProjectName(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables) {
     Project project = this.getProjectByName(projectEnglishName);
-    List<Pipeline> pendingPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.PENDING);
+    List<Pipeline> pendingPipelineList = this.queryPipelineByStatus(project.getId(), branchName, PipelineStatus.PENDING);
     if (CollUtil.isNotEmpty(pendingPipelineList)) {
-      log.info("存在挂起的流水线，停止并释放资源");
-      for (Pipeline pipeline : pendingPipelineList) {
-        // 取消任务
-        this.cancelPipelineJobs(project.getId(), pipeline.getId());
-        // 删除流水线
-        this.deletePipeline(project.getId(), pipeline.getId());
-      }
+      log.debug("存在挂起的流水线，停止并释放资源");
+      this.cancelAndDeletePipeline(project, true, pendingPipelineList);
     }
-    List<Pipeline> canceledPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.CANCELED);
+    List<Pipeline> canceledPipelineList = this.queryPipelineByStatus(project.getId(), branchName, PipelineStatus.CANCELED);
     if (CollUtil.isNotEmpty(canceledPipelineList)) {
-      log.info("存在取消的任务，释放资源");
-      for (Pipeline pipeline : canceledPipelineList) {
-        this.deletePipeline(project.getId(), pipeline.getId());
-      }
+      log.debug("存在取消的任务，释放资源");
+      this.cancelAndDeletePipeline(project, false, canceledPipelineList);
     }
     // 理论上只能有一个运行中的
-    List<Pipeline> runningPipelineList = this.getPipelineByStatus(project.getId(), branchName, PipelineStatus.RUNNING);
+    List<Pipeline> runningPipelineList = this.queryPipelineByStatus(project.getId(), branchName, PipelineStatus.RUNNING);
     if (CollUtil.isNotEmpty(runningPipelineList)) {
-      log.info("存在相同的运行中的流水线，停止并释放资源");
-      for (Pipeline pipeline : runningPipelineList) {
-        // 取消任务
-        this.cancelPipelineJobs(project.getId(), pipeline.getId());
-        // 删除流水线
-        this.deletePipeline(project.getId(), pipeline.getId());
-      }
+      log.debug("存在相同的运行中的流水线，停止并释放资源");
+      this.cancelAndDeletePipeline(project, true, runningPipelineList);
     }
     // 创建新流水线
-    return this.createPipeline(project.getId(), branchName, variables);
+    return this.createPipelineByProjectId(project.getId(), branchName, variables);
+  }
+
+  private void cancelAndDeletePipeline(Project project, boolean needCancel, List<Pipeline> pipelineList) {
+    for (Pipeline pipeline : pipelineList) {
+      if (needCancel) {
+        // 取消任务
+        this.cancelPipelineJobs(project.getId(), pipeline.getId());
+      }
+      // 删除流水线
+      this.deletePipeline(project.getId(), pipeline.getId());
+    }
   }
 
   /**
@@ -375,10 +538,10 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
    * @param variables  运行变量
    * @return /
    */
-  private Pipeline createPipeline(@NonNull Long projectId, @NonNull String branchName, Map<String, String> variables) {
+  private Pipeline createPipelineByProjectId(@NonNull Long projectId, @NonNull String branchName, Map<String, String> variables) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       Pipeline pipeline = gitLabApi.getPipelineApi().createPipeline(projectId, branchName, variables);
-      log.info("创建流水线成功, {}", JSON.toJSONString(pipeline));
+      log.debug("创建流水线成功, {}", JSON.toJSONString(pipeline));
       return pipeline;
     } catch (GitLabApiException e) {
       if (e.getMessage().contains("Pipeline filtered out by workflow rules")) {
@@ -391,7 +554,15 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     }
   }
 
-  private List<Pipeline> getPipelineByStatus(@NonNull Long projectId, @NonNull String branchName, @NonNull PipelineStatus pipelineStatus) {
+  /**
+   * 根据状态查询流水线列表
+   *
+   * @param projectId      项目id
+   * @param branchName     分支名称
+   * @param pipelineStatus 流水线状态
+   * @return /
+   */
+  private List<Pipeline> queryPipelineByStatus(@NonNull Long projectId, @NonNull String branchName, @NonNull PipelineStatus pipelineStatus) {
     try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
       PipelineFilter pipelineFilter = new PipelineFilter();
       pipelineFilter.withRef(branchName);
@@ -425,15 +596,23 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
     }
   }
 
-//  private void createRepositoryFile(Long id, String filePath, String branchName, String content) {
-//    try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
-//      RepositoryFile repositoryFile = new RepositoryFile();
-//      repositoryFile.setEncoding(Constants.Encoding.TEXT);
-//      repositoryFile.setFilePath(filePath);
-//      repositoryFile.setContent(content);
-//      gitLabApi.getRepositoryFileApi().createFile(id, repositoryFile, branchName, SystemConst.CURRENT_APP_TITLE + "自动补充");
-//    } catch (GitLabApiException e) {
-//      throw new BadRequestException("创建仓库文件 " + filePath + " 失败");
-//    }
-//  }
+  /**
+   * 创建文件
+   *
+   * @param projectId  项目id
+   * @param branchName 分支名称
+   * @param filePath   文件路径
+   * @param content    文件内容
+   */
+  private void createRepositoryFile(Long projectId, String branchName, String filePath, String content) {
+    try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
+      RepositoryFile repositoryFile = new RepositoryFile();
+      repositoryFile.setEncoding(Constants.Encoding.TEXT);
+      repositoryFile.setFilePath(filePath);
+      repositoryFile.setContent(content);
+      gitLabApi.getRepositoryFileApi().createFile(projectId, repositoryFile, branchName, SystemConst.CURRENT_APP_TITLE + "自动补充");
+    } catch (GitLabApiException e) {
+      throw new BadRequestException("创建仓库文件 " + filePath + " 失败");
+    }
+  }
 }

@@ -31,7 +31,7 @@ spring:
       database: ${REDIS_DB:1}
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PWD:kd123456}
+      password: ${REDIS_PWD:kd123456789}
       # 连接超时时间
       timeout: 5000
       repositories:
@@ -44,7 +44,7 @@ spring:
       driverClassName: com.p6spy.engine.spy.P6SpyDriver
       url: jdbc:p6spy:mysql://127.0.0.1:3306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
       username: root
-      password: kd123456
+      password: kd123456789
       # 初始连接数，建议设置为与最小空闲连接数相同
       initial-size: 2
       # 最小空闲连接数，保持足够的空闲连接以应对请求
@@ -174,10 +174,10 @@ app:
   oss:
     max-size: 10
     minio:
-      endpoint: https://oss.odboy.cn
-      bucketName: cutejava
-      accessKey: 74rgxZtiYtOzsY9U8W9F
-      secretKey: 7d1BiBlfFQDBHKfwAWjF18TLUMjbd9VbSgnncsTw
+      endpoint: http://127.0.0.1:9000
+      bucketName: kenaito-pilot
+      accessKey: root
+      secretKey: kd123456789
   captcha:
     expireTime: 300
   # 序列化白名单
@@ -185,6 +185,16 @@ app:
     - "org.springframework"
     - "cn.odboy.system.dal.dataobject"
     - "cn.odboy.system.dal.model"
+    - "cn.odboy.pilot.app.dal.dataobject"
+    - "cn.odboy.pilot.app.dal.model"
+    - "cn.odboy.pilot.cmdb.dal.dataobject"
+    - "cn.odboy.pilot.cmdb.dal.model"
+    - "cn.odboy.pilot.dingtalk.dal.dataobject"
+    - "cn.odboy.pilot.dingtalk.dal.model"
+    - "cn.odboy.pilot.gitlab.dal.dataobject"
+    - "cn.odboy.pilot.gitlab.dal.model"
+    - "cn.odboy.pilot.kubernetes.dal.dataobject"
+    - "cn.odboy.pilot.kubernetes.dal.model"
 # debug
 #debug: true
 # 日志配置

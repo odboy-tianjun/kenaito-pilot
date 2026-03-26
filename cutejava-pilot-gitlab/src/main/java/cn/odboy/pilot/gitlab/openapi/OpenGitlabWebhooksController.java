@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.gitlab.openapi;
+package cn.odboy.pilot.gitlab.openapi;
 
 import cn.odboy.annotation.AnonymousGetMapping;
-import cn.odboy.gitlab.dal.model.GitlabRunnerBuildReportRequest;
+import cn.odboy.pilot.gitlab.dal.model.GitlabRunnerBuildReportRequest;
 import com.alibaba.fastjson2.JSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.gitlab.service;
+package cn.odboy.pilot.gitlab.service;
 
+import cn.odboy.pilot.gitlab.core.GitlabPipelineListener;
 import lombok.NonNull;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.Project;
+
 import java.util.Map;
 
 public interface GitlabService {
@@ -55,7 +57,7 @@ public interface GitlabService {
   MergeRequest mergeBranch(@NonNull String projectEnglishName, @NonNull String sourceBranch, @NonNull String targetBranch);
 
   /**
-   * 创建并启动流水线
+   * 启动流水线
    *
    * @param projectEnglishName 项目英文名称
    * @param branchName         分支名称
@@ -63,6 +65,16 @@ public interface GitlabService {
    * @return /
    */
   Pipeline startPipeline(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables);
+
+  /**
+   * 启动流水线
+   *
+   * @param projectEnglishName 项目英文名称
+   * @param branchName         分支名称
+   * @param variables          运行变量
+   * @param listener           运行监听
+   */
+  void startPipelineWithListener(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables, GitlabPipelineListener listener);
 
   /**
    * 根据流水线id查询

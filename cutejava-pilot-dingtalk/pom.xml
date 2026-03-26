@@ -7,8 +7,8 @@
     <version>1.5.2</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>cutejava-module-demo</artifactId>
-  <name>模块例子</name>
+  <artifactId>cutejava-pilot-dingtalk</artifactId>
+  <name>钉钉相关</name>
   <dependencies>
     <dependency>
       <groupId>cn.odboy</groupId>

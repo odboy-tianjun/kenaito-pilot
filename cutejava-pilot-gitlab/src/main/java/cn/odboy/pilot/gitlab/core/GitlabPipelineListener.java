@@ -13,16 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.gitlab.constant;
+package cn.odboy.pilot.gitlab.core;
+
+import org.gitlab4j.api.models.Pipeline;
 
 /**
- * 默认常量
+ * 流水线监听
  */
-public interface GitlabConst {
+public interface GitlabPipelineListener {
 
   /**
-   * 默认分支名称（和gitlab默认分支配置一致）
+   * 没有资源、没有准备就绪、运行超时，这个方法调用等于流水线结束
+   *
+   * @param pipeline /
    */
-  String DEFAULT_BRANCH_NAME = "main";
-  long ROOT_ID = 1L;
+  void pending(Pipeline pipeline);
+
+  /**
+   * 流水线运行中
+   *
+   * @param pipeline /
+   */
+  void running(Pipeline pipeline);
+
+  /**
+   * 流水线执行成功
+   *
+   * @param pipeline /
+   */
+  void success(Pipeline pipeline);
+
+  /**
+   * 流水线执行失败
+   *
+   * @param pipeline /
+   */
+  void failed(Pipeline pipeline);
 }

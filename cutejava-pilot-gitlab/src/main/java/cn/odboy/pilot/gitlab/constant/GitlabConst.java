@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.gitlab.config;
+package cn.odboy.pilot.gitlab.constant;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Getter
-@Setter
-@Component
-@ConfigurationProperties(prefix = "gitlab")
-public class GitlabProperties {
+/**
+ * 默认常量
+ */
+public interface GitlabConst {
 
   /**
-   * gitlab地址
+   * 默认分支名称（和gitlab默认分支配置一致）
    */
-  private String endpoint;
-  /**
-   * 令牌。懂得都懂
-   */
-  private String token;
+  String DEFAULT_BRANCH_NAME = "main";
+  long ROOT_ID = 1L;
 }

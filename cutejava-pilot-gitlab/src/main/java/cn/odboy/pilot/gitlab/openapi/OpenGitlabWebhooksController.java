@@ -16,7 +16,7 @@
 package cn.odboy.pilot.gitlab.openapi;
 
 import cn.odboy.annotation.AnonymousGetMapping;
-import cn.odboy.pilot.gitlab.dal.model.GitlabRunnerBuildReportRequest;
+import cn.odboy.pilot.gitlab.dal.model.GitlabModel;
 import com.alibaba.fastjson2.JSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,7 +37,7 @@ public class OpenGitlabWebhooksController {
    */
   @ApiOperation("构建上报入口")
   @AnonymousGetMapping(value = "/build")
-  public ResponseEntity<?> report(@ModelAttribute GitlabRunnerBuildReportRequest request) {
+  public ResponseEntity<?> report(@ModelAttribute GitlabModel.RunnerBuildReportArgs request) {
     // 构建状态回传：{"commitId":"fdaa4e409037586b6c9dce9fcc9e355e4a84f897","contextName":"kenaito-pilot","envCode":"daily","imageName":"registry.cn-shanghai.aliyuncs.com/odboy/devops:kenaito-pilot_daily_20260325190837","jobId":"50","pipelineId":"43","projectId":"6","status":"success","versionCode":"20260325190837"}
     log.info("构建状态回传：{}", JSON.toJSONString(request));
     return ResponseEntity.ok(null);

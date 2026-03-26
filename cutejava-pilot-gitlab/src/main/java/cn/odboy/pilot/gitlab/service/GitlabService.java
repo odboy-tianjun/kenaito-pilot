@@ -16,12 +16,14 @@
 package cn.odboy.pilot.gitlab.service;
 
 import cn.odboy.pilot.gitlab.core.GitlabPipelineListener;
+import cn.odboy.pilot.gitlab.dal.model.GitlabModel;
 import lombok.NonNull;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.Project;
 
+import java.util.List;
 import java.util.Map;
 
 public interface GitlabService {
@@ -75,4 +77,11 @@ public interface GitlabService {
    * @param listener           运行监听
    */
   void startPipelineWithListener(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables, GitlabPipelineListener listener);
+
+  /**
+   * 列出所有的分组
+   *
+   * @return /
+   */
+  List<GitlabModel.Group> listGroup();
 }

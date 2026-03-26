@@ -15,6 +15,7 @@
  */
 package cn.odboy.pilot.gitlab.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
@@ -23,6 +24,7 @@ import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pilot.gitlab.config.GitlabProperties;
 import cn.odboy.pilot.gitlab.constant.GitlabConst;
 import cn.odboy.pilot.gitlab.core.GitlabPipelineListener;
+import cn.odboy.pilot.gitlab.dal.model.GitlabModel;
 import cn.odboy.pilot.gitlab.service.GitlabService;
 import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
@@ -619,6 +621,16 @@ public class GitlabServiceImpl implements InitializingBean, GitlabService {
       gitLabApi.getRepositoryFileApi().createFile(projectId, repositoryFile, branchName, SystemConst.CURRENT_APP_TITLE + "自动补充");
     } catch (GitLabApiException e) {
       throw new BadRequestException("创建仓库文件 " + filePath + " 失败");
+    }
+  }
+
+  @Override
+  public List<GitlabModel.Group> listGroup() {
+    try (GitLabApi gitLabApi = new GitLabApi(properties.getEndpoint(), properties.getToken())) {
+      List<Group> groups = gitLabApi.getGroupApi().getGroups();
+      return BeanUtil.copyToList(groups, GitlabModel.Group.class);
+    } catch (GitLabApiException e) {
+      throw new BadRequestException(e);
     }
   }
 }

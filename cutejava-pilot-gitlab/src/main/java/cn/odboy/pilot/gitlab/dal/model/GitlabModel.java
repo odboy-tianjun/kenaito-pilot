@@ -50,17 +50,4 @@ public class GitlabModel {
      */
     private String status;
   }
-
-  /**
-   * 分组
-   */
-  @Getter
-  @Setter
-  public class Group extends KitObject {
-
-    private Long id;
-    private String name;
-    private String path;
-    private String description;
-  }
 }

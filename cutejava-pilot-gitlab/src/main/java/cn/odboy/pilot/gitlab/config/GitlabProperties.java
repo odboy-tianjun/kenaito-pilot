@@ -35,6 +35,10 @@ public class GitlabProperties {
    */
   private String token;
   /**
+   * root用户的id
+   */
+  private Long rootId;
+  /**
    * 流水线相关
    */
   private Pipeline pipeline;

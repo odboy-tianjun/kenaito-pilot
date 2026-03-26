@@ -16,7 +16,6 @@
 package cn.odboy.pilot.gitlab.service;
 
 import cn.odboy.pilot.gitlab.core.GitlabPipelineListener;
-import cn.odboy.pilot.gitlab.dal.model.GitlabModel;
 import lombok.NonNull;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.MergeRequest;
@@ -59,6 +58,15 @@ public interface GitlabService {
   MergeRequest mergeBranch(@NonNull String projectEnglishName, @NonNull String sourceBranch, @NonNull String targetBranch);
 
   /**
+   * 分支合并到默认分支
+   *
+   * @param projectEnglishName 项目英文名称
+   * @param sourceBranch       源分支名称
+   * @return /
+   */
+  MergeRequest mergeDefaultBranch(@NonNull String projectEnglishName, @NonNull String sourceBranch);
+
+  /**
    * 启动流水线
    *
    * @param projectEnglishName 项目英文名称
@@ -83,5 +91,5 @@ public interface GitlabService {
    *
    * @return /
    */
-  List<GitlabModel.Group> listGroup();
+  List<Group> listGroup();
 }

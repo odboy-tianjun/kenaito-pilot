@@ -30,6 +30,13 @@ public interface GitlabPipelineListener {
   void pending(Pipeline pipeline);
 
   /**
+   * 流水线开始执行
+   *
+   * @param pipeline /
+   */
+  void start(Pipeline pipeline);
+
+  /**
    * 流水线运行中
    *
    * @param pipeline /
@@ -49,4 +56,5 @@ public interface GitlabPipelineListener {
    * @param pipeline /
    */
   void failed(Pipeline pipeline);
+
 }

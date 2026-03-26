@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/webhooks/gitlab")
 @Api(tags = "Gitlab：免签验证")
-public class OpenGitlabWebhooksController {
+public class OpenWebhooksController {
 
   /**
    * 此处的@ModelAttribute注解可以省略，但是为了方便学习，这里不做处理

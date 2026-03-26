@@ -57,6 +57,11 @@ public class GitlabTests {
   }
 
   @Test
+  public void testMergeDefaultBranch() {
+    gitlabService.mergeDefaultBranch("asdasd", "asdasdasda");
+  }
+
+  @Test
   public void testSyncCreatePipeline() {
     // 容器镜像服务
     String criServiceUser = "tianjun@odboy.cn";
@@ -108,6 +113,11 @@ public class GitlabTests {
           @Override
           public void pending(Pipeline pipeline) {
             System.err.println("============== 挂起 ==============");
+          }
+
+          @Override
+          public void start(Pipeline pipeline) {
+            System.err.println("============== 开始执行 ==============");
           }
 
           @Override

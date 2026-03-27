@@ -87,7 +87,7 @@ public class GitlabRepositoryInitializer implements InitializingBean, GitlabRepo
     if (StrUtil.isBlank(groupName)) {
       namespace = this.getRootNamespace();
     } else {
-      Group group = this.getGroupByName(groupName);
+      Group group = this.getGroupByName(masterSiteConfig, groupName);
       if (group == null) {
         group = this.createGroup(groupName, SystemConst.CURRENT_APP_TITLE + " 自动创建");
       }
@@ -599,9 +599,9 @@ public class GitlabRepositoryInitializer implements InitializingBean, GitlabRepo
    * @param groupName 分组名称
    * @return /
    */
-  private Group getGroupByName(@NonNull String groupName) {
-    GitlabSiteConfigTb masterSiteConfig = gitlabSiteConfigService.getMasterSiteConfig();
-    try (GitLabApi gitLabApi = new GitLabApi(masterSiteConfig.getEndpoint(), masterSiteConfig.getToken())) {
+  @Override
+  public Group getGroupByName(GitlabSiteConfigTb siteConfig, String groupName) {
+    try (GitLabApi gitLabApi = new GitLabApi(siteConfig.getEndpoint(), siteConfig.getToken())) {
 //      return gitLabApi.getGroupApi().getGroupsStream(groupName).filter(f -> f.getName().equals(groupName)).findFirst().orElse(null);
       Pager<Group> groups = gitLabApi.getGroupApi().getGroups(groupName, 1);
       return groups.current().stream().filter(f -> f.getName().equals(groupName)).findFirst().orElse(null);

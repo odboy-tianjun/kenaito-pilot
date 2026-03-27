@@ -15,6 +15,15 @@
  */
 package cn.odboy.app.controller;
 
+import cn.odboy.app.service.AppInfoService;
+import cn.odboy.system.dal.model.request.SystemCreateDeptArgs;
+import cn.odboy.system.framework.operalog.OperationLog;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +36,17 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2026-03-27
  */
 @RestController
-@RequestMapping("/app/app-info-tb")
+@RequestMapping("/api/app")
 public class AppInfoController {
 
+  @Autowired
+  private AppInfoService appInfoService;
+
+  @OperationLog
+  @ApiOperation("新增应用")
+  @PostMapping(value = "/createApp")
+  public ResponseEntity<Void> createApp(@Validated @RequestBody SystemCreateDeptArgs args) {
+//    appInfoService.createApp(args);
+    return ResponseEntity.ok(null);
+  }
 }

@@ -16,12 +16,15 @@
 package cn.odboy.gitlab.dal.dataobject;
 
 import cn.odboy.base.KitBaseUserTimeTb;
+import cn.odboy.base.KitObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -103,4 +106,34 @@ public class GitlabSiteConfigTb extends KitBaseUserTimeTb {
   @TableField("`error_message`")
   @ApiModelProperty("错误信息")
   private String errorMessage;
+
+  @Getter
+  @Setter
+  public static class CreateArgs extends KitObject {
+
+    @NotBlank(message = "Gitlab别名必填")
+    private String name;
+    @NotBlank(message = "Gitlab地址必填")
+    private String endpoint;
+    @NotBlank(message = "PersonAccessToken必填")
+    private String token;
+    private String defaultGroupName;
+  }
+
+  @Getter
+  @Setter
+  public static class UpdateArgs extends KitObject {
+
+    @NotNull
+    private Long id;
+    @NotBlank(message = "Gitlab别名必填")
+    private String name;
+    @NotBlank(message = "Gitlab地址必填")
+    private String endpoint;
+    @NotBlank(message = "PersonAccessToken必填")
+    private String token;
+    private String defaultGroupName;
+    private Boolean status;
+    private Boolean master;
+  }
 }

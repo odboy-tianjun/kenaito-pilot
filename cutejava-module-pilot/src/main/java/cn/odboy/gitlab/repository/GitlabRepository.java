@@ -15,6 +15,7 @@
  */
 package cn.odboy.gitlab.repository;
 
+import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
 import cn.odboy.gitlab.infra.GitlabPipelineListener;
 import lombok.NonNull;
 import org.gitlab4j.api.models.Group;
@@ -37,4 +38,13 @@ public interface GitlabRepository {
   Pipeline startPipeline(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables);
 
   void startPipelineWithListener(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables, GitlabPipelineListener listener);
+
+  /**
+   * 根据分组名称查询
+   *
+   * @param config    /
+   * @param groupName /
+   * @return /
+   */
+  Group getGroupByName(GitlabSiteConfigTb config, String groupName);
 }

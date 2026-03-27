@@ -34,4 +34,18 @@ public interface GitlabSiteConfigService extends IService<GitlabSiteConfigTb> {
    * @return /
    */
   GitlabSiteConfigTb getMasterSiteConfig();
+
+  /**
+   * 创建站点配置
+   *
+   * @param args /
+   */
+  void createSiteConfig(GitlabSiteConfigTb.CreateArgs args);
+
+  /**
+   * 修改站点配置
+   *
+   * @param args /
+   */
+  void updateSiteConfig(GitlabSiteConfigTb.UpdateArgs args);
 }

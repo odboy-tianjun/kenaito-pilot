@@ -15,12 +15,17 @@
  */
 package cn.odboy.gitlab.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
 import cn.odboy.gitlab.dal.mysql.GitlabSiteConfigMapper;
+import cn.odboy.gitlab.repository.GitlabRepository;
 import cn.odboy.gitlab.service.GitlabSiteConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.gitlab4j.api.models.Group;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -33,6 +38,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class GitlabSiteConfigServiceImpl extends ServiceImpl<GitlabSiteConfigMapper, GitlabSiteConfigTb> implements GitlabSiteConfigService {
 
+  @Autowired
+  private GitlabRepository gitlabRepository;
+
   @Override
   public GitlabSiteConfigTb getMasterSiteConfig() {
     GitlabSiteConfigTb masterConfig = lambdaQuery().eq(GitlabSiteConfigTb::getStatus, 1).eq(GitlabSiteConfigTb::getMaster, 1).one();
@@ -40,5 +48,36 @@ public class GitlabSiteConfigServiceImpl extends ServiceImpl<GitlabSiteConfigMap
       throw new BadRequestException("必须至少配置一个Gitlab主站点");
     }
     return masterConfig;
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public void createSiteConfig(GitlabSiteConfigTb.CreateArgs args) {
+    String name = StrUtil.trim(args.getName());
+    String endpoint = StrUtil.trim(args.getEndpoint());
+    String token = StrUtil.trim(args.getToken());
+    String defaultGroupName = StrUtil.trim(args.getDefaultGroupName());
+
+    GitlabSiteConfigTb record = new GitlabSiteConfigTb();
+    record.setName(name);
+    record.setEndpoint(endpoint);
+    record.setToken(token);
+    record.setDefaultGroupName(name);
+
+    Group group = gitlabRepository.getGroupByName(record, defaultGroupName);
+    record.setDefaultGroupId(group.getId());
+    record.setStatus(true);
+
+    boolean hasMaster = lambdaQuery().eq(GitlabSiteConfigTb::getMaster, 1).count() > 0;
+    if (!hasMaster) {
+      record.setMaster(true);
+    }
+
+    save(record);
+  }
+
+  @Override
+  public void updateSiteConfig(GitlabSiteConfigTb.UpdateArgs args) {
+
   }
 }

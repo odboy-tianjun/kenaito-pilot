@@ -16,7 +16,7 @@
 package cn.odboy.gitlab.openapi;
 
 import cn.odboy.annotation.AnonymousGetMapping;
-import cn.odboy.pilot.gitlab.dal.model.GitlabModel;
+import cn.odboy.gitlab.dal.model.GitlabModel;
 import com.alibaba.fastjson2.JSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

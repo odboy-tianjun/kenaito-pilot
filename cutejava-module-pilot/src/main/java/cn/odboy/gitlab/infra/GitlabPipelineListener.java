@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.gitlab.pipeline;
+package cn.odboy.gitlab.infra;
 
 import org.gitlab4j.api.models.Pipeline;
 

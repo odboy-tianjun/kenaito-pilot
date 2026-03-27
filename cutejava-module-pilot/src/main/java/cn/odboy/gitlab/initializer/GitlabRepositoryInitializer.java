@@ -20,9 +20,10 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.constant.SystemConst;
 import cn.odboy.framework.exception.BadRequestException;
-import cn.odboy.gitlab.config.GitlabProperties;
 import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
-import cn.odboy.gitlab.pipeline.GitlabPipelineListener;
+import cn.odboy.gitlab.infra.GitlabPipelineListener;
+import cn.odboy.gitlab.infra.GitlabProperties;
+import cn.odboy.gitlab.repository.GitlabRepository;
 import cn.odboy.gitlab.service.GitlabSiteConfigService;
 import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
@@ -44,7 +45,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class GitlabRepository implements InitializingBean {
+public class GitlabRepositoryInitializer implements InitializingBean, GitlabRepository {
 
   @Autowired
   private GitlabProperties properties;
@@ -55,7 +56,18 @@ public class GitlabRepository implements InitializingBean {
 
   @Override
   public void afterPropertiesSet() {
-    this.showVersion();
+    List<GitlabSiteConfigTb> configTbs = gitlabSiteConfigService.list();
+    for (GitlabSiteConfigTb configTb : configTbs) {
+      try {
+        this.getOneGroup(configTb);
+        configTb.setStatus(true);
+        configTb.setErrorMessage("");
+      } catch (Exception e) {
+        configTb.setStatus(false);
+        configTb.setErrorMessage(e.getMessage());
+      }
+    }
+    gitlabSiteConfigService.updateBatchById(configTbs);
   }
 
   /**
@@ -67,6 +79,7 @@ public class GitlabRepository implements InitializingBean {
    * @param description 描述
    * @return /
    */
+  @Override
   public Project createProject(String groupName, String chineseName, @NonNull String englishName, @NonNull String description) {
     GitlabSiteConfigTb masterSiteConfig = gitlabSiteConfigService.getMasterSiteConfig();
 
@@ -105,6 +118,7 @@ public class GitlabRepository implements InitializingBean {
    * @param description 组描述
    * @return /
    */
+  @Override
   public Group createGroup(@NonNull String groupName, @NonNull String description) {
     GitlabSiteConfigTb masterSiteConfig = gitlabSiteConfigService.getMasterSiteConfig();
     try (GitLabApi gitLabApi = new GitLabApi(masterSiteConfig.getEndpoint(), masterSiteConfig.getToken())) {
@@ -130,6 +144,7 @@ public class GitlabRepository implements InitializingBean {
    * @param targetBranch       目标分支名称
    * @return /
    */
+  @Override
   public MergeRequest mergeBranch(@NonNull String projectEnglishName, @NonNull String sourceBranch, @NonNull String targetBranch) {
     Project project = this.getProjectByName(projectEnglishName);
     return this.mergeBranch(project.getId(), sourceBranch, targetBranch);
@@ -142,6 +157,7 @@ public class GitlabRepository implements InitializingBean {
    * @param sourceBranch       源分支名称
    * @return /
    */
+  @Override
   public MergeRequest mergeDefaultBranch(@NonNull String projectEnglishName, @NonNull String sourceBranch) {
     Project project = this.getProjectByName(projectEnglishName);
     String defaultBranch = project.getDefaultBranch();
@@ -156,6 +172,7 @@ public class GitlabRepository implements InitializingBean {
    * @param variables          运行变量
    * @return /
    */
+  @Override
   public Pipeline startPipeline(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables) {
     Pipeline pipeline = this.createPipelineByProjectName(projectEnglishName, branchName, variables);
     return this.waitForPipelineCompletion(pipeline, null);
@@ -169,9 +186,10 @@ public class GitlabRepository implements InitializingBean {
    * @param variables          运行变量
    * @param listener           运行监听
    */
+  @Override
   public void startPipelineWithListener(@NonNull String projectEnglishName, @NonNull String branchName, Map<String, String> variables, GitlabPipelineListener listener) {
     Pipeline pipeline = this.createPipelineByProjectName(projectEnglishName, branchName, variables);
-    taskExecutor.execute(() -> GitlabRepository.this.waitForPipelineCompletion(pipeline, listener));
+    taskExecutor.execute(() -> GitlabRepositoryInitializer.this.waitForPipelineCompletion(pipeline, listener));
   }
 
   /**
@@ -189,16 +207,13 @@ public class GitlabRepository implements InitializingBean {
   }
 
   /**
-   * 展示版本号
+   * 查询一个分组信息
    */
-  private void showVersion() {
-    GitlabSiteConfigTb masterSiteConfig = gitlabSiteConfigService.getMasterSiteConfig();
-    try (GitLabApi gitLabApi = new GitLabApi(masterSiteConfig.getEndpoint(), masterSiteConfig.getToken())) {
-      String apiNamespace = gitLabApi.getApiVersion().getApiNamespace();
-      log.info("Gitlab版本：{}", apiNamespace);
-    } catch (Exception e) {
-      log.error("Gitlab异常", e);
-      throw new BadRequestException("Gitlab异常");
+  private void getOneGroup(GitlabSiteConfigTb siteConfig) {
+    try (GitLabApi gitLabApi = new GitLabApi(siteConfig.getEndpoint(), siteConfig.getToken())) {
+      gitLabApi.getGroupApi().getGroups(1);
+    } catch (GitLabApiException e) {
+      throw new BadRequestException(e);
     }
   }
 

@@ -33,7 +33,7 @@ import java.util.Date;
  * 系统审计日志
  * </p>
  *
- * @author codegen
+ * @author odboy
  * @since 2025-05-12
  */
 @Getter

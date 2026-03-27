@@ -52,7 +52,7 @@ import java.util.List;
  * OSS存储 Minio服务实现类
  * </p>
  *
- * @author codegen
+ * @author odboy
  * @since 2025-07-15
  */
 @Service

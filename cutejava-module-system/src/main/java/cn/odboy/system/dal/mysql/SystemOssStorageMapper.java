@@ -24,7 +24,7 @@ import org.apache.ibatis.annotations.Mapper;
  * OSS存储 Mapper 接口
  * </p>
  *
- * @author codegen
+ * @author odboy
  * @since 2025-07-15
  */
 @Mapper

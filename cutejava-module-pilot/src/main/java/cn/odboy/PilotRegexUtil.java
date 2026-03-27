@@ -13,23 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.odboy.kubernetes.service.impl;
+package cn.odboy;
 
-import cn.odboy.kubernetes.dal.dataobject.K8sPodSpecsTb;
-import cn.odboy.kubernetes.dal.mysql.K8sPodSpecsMapper;
-import cn.odboy.kubernetes.service.K8sPodSpecsService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.springframework.stereotype.Service;
+import cn.hutool.core.util.ReUtil;
+import cn.odboy.framework.exception.BadRequestException;
 
 /**
- * <p>
- * K8s Pod 规格 服务实现类
- * </p>
- *
- * @author odboy
- * @since 2026-03-27
+ * 正则表达式工具
  */
-@Service
-public class K8sPodSpecsServiceImpl extends ServiceImpl<K8sPodSpecsMapper, K8sPodSpecsTb> implements K8sPodSpecsService {
+public class PilotRegexUtil {
 
+  /**
+   * 校验应用名称
+   *
+   * @param appName 应用名称
+   */
+  public static void validAppName(String appName) {
+    boolean result = ReUtil.isMatch("^[a-zA-Z0-9_][a-zA-Z0-9_\\-.]{0,99}$", appName);
+    if (!result) {
+      throw new BadRequestException("应用名称：只能包含字母和数字、 '_'、 '.'和'-'，且只能以字母、数字或'_'开头");
+    }
+  }
 }

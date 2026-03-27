@@ -30,7 +30,7 @@ import java.util.List;
  * OSS存储接口
  * </p>
  *
- * @author codegen
+ * @author odboy
  * @since 2025-07-15
  */
 public interface SystemOssStorageService extends IService<SystemOssStorageTb> {

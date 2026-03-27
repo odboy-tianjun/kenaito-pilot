@@ -30,7 +30,7 @@ import lombok.Setter;
  * OSS存储
  * </p>
  *
- * @author codegen
+ * @author odboy
  * @since 2025-07-15
  */
 @Getter

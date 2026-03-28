@@ -77,6 +77,13 @@ public class K8sNodeTb extends KitBaseUserTimeTb {
   private String clusterIp;
 
   /**
+   * 集群版本
+   */
+  @TableField("cluster_version")
+  @ApiModelProperty("集群版本")
+  private String clusterVersion;
+
+  /**
    * 集群配置
    */
   @ApiModelProperty("集群配置")

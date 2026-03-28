@@ -35,7 +35,7 @@ public class K8sNodeServiceImpl extends ServiceImpl<K8sNodeMapper, K8sNodeTb> im
 
   @Override
   public K8sNodeTb getByClusterCode(String clusterCode) {
-    return lambdaQuery().eq(K8sNodeTb::getStatus, StatusEnum.ENABLED.getCode()).one();
+    return lambdaQuery().eq(K8sNodeTb::getClusterCode, clusterCode).one();
   }
 
   @Override

@@ -32,19 +32,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.models.*;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupParams;
+import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestFilter;
+import org.gitlab4j.api.models.MergeRequestParams;
+import org.gitlab4j.api.models.Namespace;
+import org.gitlab4j.api.models.Pipeline;
+import org.gitlab4j.api.models.PipelineFilter;
+import org.gitlab4j.api.models.PipelineStatus;
+import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.RepositoryFile;
+import org.gitlab4j.api.models.Visibility;
 import org.gitlab4j.models.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Service
+@Component
 public class GitlabRepositoryInitializer implements InitializingBean, GitlabRepository {
 
   @Autowired

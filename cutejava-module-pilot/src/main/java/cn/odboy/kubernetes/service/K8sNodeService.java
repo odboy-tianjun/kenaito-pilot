@@ -28,4 +28,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface K8sNodeService extends IService<K8sNodeTb> {
 
+  /**
+   * 根据集群编码查询集群信息
+   *
+   * @param clusterCode 集群编码
+   * @return /
+   */
+  K8sNodeTb getByClusterCode(String clusterCode);
+
+  void updateStatusById(Long id, boolean status, String errorMessage);
 }

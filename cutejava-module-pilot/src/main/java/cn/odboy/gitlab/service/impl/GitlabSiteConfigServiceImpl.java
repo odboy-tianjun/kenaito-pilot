@@ -21,9 +21,11 @@ import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
 import cn.odboy.gitlab.dal.mysql.GitlabSiteConfigMapper;
 import cn.odboy.gitlab.repository.GitlabRepository;
 import cn.odboy.gitlab.service.GitlabSiteConfigService;
+import cn.odboy.meta.constant.StatusEnum;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.gitlab4j.api.models.Group;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,12 +40,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GitlabSiteConfigServiceImpl extends ServiceImpl<GitlabSiteConfigMapper, GitlabSiteConfigTb> implements GitlabSiteConfigService {
 
+  @Lazy
   @Autowired
   private GitlabRepository gitlabRepository;
 
   @Override
   public GitlabSiteConfigTb getMasterSiteConfig() {
-    GitlabSiteConfigTb masterConfig = lambdaQuery().eq(GitlabSiteConfigTb::getStatus, 1).eq(GitlabSiteConfigTb::getMaster, 1).one();
+    GitlabSiteConfigTb masterConfig = lambdaQuery().eq(GitlabSiteConfigTb::getStatus, StatusEnum.ENABLED.getCode())
+        .eq(GitlabSiteConfigTb::getMaster, StatusEnum.ENABLED.getCode()).one();
     if (masterConfig == null) {
       throw new BadRequestException("必须至少配置一个Gitlab主站点");
     }

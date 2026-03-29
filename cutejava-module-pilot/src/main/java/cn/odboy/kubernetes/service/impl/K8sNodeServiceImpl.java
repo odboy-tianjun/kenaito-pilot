@@ -18,7 +18,6 @@ package cn.odboy.kubernetes.service.impl;
 import cn.odboy.kubernetes.dal.dataobject.K8sNodeTb;
 import cn.odboy.kubernetes.dal.mysql.K8sNodeMapper;
 import cn.odboy.kubernetes.service.K8sNodeService;
-import cn.odboy.meta.constant.StatusEnum;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
@@ -35,11 +34,8 @@ public class K8sNodeServiceImpl extends ServiceImpl<K8sNodeMapper, K8sNodeTb> im
 
   @Override
   public K8sNodeTb getByClusterCode(String clusterCode) {
-    return lambdaQuery().eq(K8sNodeTb::getClusterCode, clusterCode).one();
-  }
-
-  @Override
-  public void updateStatusById(Long id, boolean status, String errorMessage) {
-    lambdaUpdate().eq(K8sNodeTb::getId, id).set(K8sNodeTb::getStatus, status).set(K8sNodeTb::getErrorMessage, errorMessage).update();
+    return lambdaQuery()
+        .eq(K8sNodeTb::getClusterCode, clusterCode)
+        .one();
   }
 }

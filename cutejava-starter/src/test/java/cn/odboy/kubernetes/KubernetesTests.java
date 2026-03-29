@@ -32,8 +32,7 @@ public class KubernetesTests {
 
   @Test
   public void test1() {
-    KubernetesClient clusterClient = kubernetesRepository.getClusterClient("local_test");
-    Service service = kubernetesRepository.createClusterIPService(clusterClient, "kenaito-pilot", "daily", 8000);
+    Service service = kubernetesRepository.createClusterIPService("local_test", "kenaito-pilot", "daily", 8000);
     System.err.println(service);
   }
 }

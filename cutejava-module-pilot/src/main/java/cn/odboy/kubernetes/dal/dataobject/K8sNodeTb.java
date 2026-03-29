@@ -84,25 +84,25 @@ public class K8sNodeTb extends KitBaseUserTimeTb {
   private String clusterVersion;
 
   /**
-   * 集群配置
+   * 集群客户端配置
    */
-  @ApiModelProperty("集群配置")
-  @TableField("cluster_config")
-  private String clusterConfig;
+  @ApiModelProperty("集群客户端配置")
+  @TableField("cluster_client_config")
+  private String clusterClientConfig;
 
   /**
-   * 应用配置
+   * 默认工作负载配置
    */
-  @ApiModelProperty("应用配置")
-  @TableField("app_config")
-  private String appConfig;
+  @ApiModelProperty("默认工作负载配置")
+  @TableField("default_workload_config")
+  private String defaultWorkloadConfig;
 
   /**
-   * 默认应用镜像
+   * 默认镜像
    */
-  @ApiModelProperty("默认应用镜像")
-  @TableField("default_app_image")
-  private String defaultAppImage;
+  @ApiModelProperty("默认镜像")
+  @TableField("default_image")
+  private String defaultImage;
 
   /**
    * 是否启用
@@ -110,6 +110,13 @@ public class K8sNodeTb extends KitBaseUserTimeTb {
   @TableField("`status`")
   @ApiModelProperty("是否启用")
   private Boolean status;
+
+  /**
+   * 是否健康
+   */
+  @TableField("`health_status`")
+  @ApiModelProperty("是否健康")
+  private Boolean healthStatus;
 
   /**
    * 异常信息

@@ -1,13 +1,16 @@
 package cn.odboy.kubernetes.initializer;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.odboy.constant.SystemConst;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.kubernetes.dal.dataobject.K8sNodeTb;
 import cn.odboy.kubernetes.repository.KubernetesRepository;
 import cn.odboy.kubernetes.service.K8sNodeService;
 import cn.odboy.meta.constant.K8sLabelEnum;
+import cn.odboy.meta.constant.StatusEnum;
 import cn.odboy.meta.util.PilotNameUtil;
 import cn.odboy.util.KitDateUtil;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
@@ -31,6 +34,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
@@ -40,32 +44,47 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
   private K8sNodeService k8sNodeService;
   @Resource(name = "taskAsync")
   private ThreadPoolTaskExecutor taskExecutor;
+  /**
+   * 存放所有客户端
+   */
+  private final Map<String, KubernetesClient> clientMap = new ConcurrentHashMap<>();
+  /**
+   * 功能测试阶段建议设置为false
+   */
+  private static final boolean isLoopCheck = false;
 
-  @Override
-  public KubernetesClient getClusterClient(String clusterCode) {
+  /**
+   * 根据集群编码获取客户端
+   *
+   * @param clusterCode 集群编码
+   * @return /
+   */
+  private KubernetesClient getClient(String clusterCode) {
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(clusterCode);
-    Config config = Config.fromKubeconfig(k8sNode.getClusterConfig());
+    Config config = Config.fromKubeconfig(k8sNode.getClusterClientConfig());
     return new KubernetesClientBuilder().withConfig(config).build();
   }
 
   @Override
-  public Namespace getNamespaceByName(KubernetesClient client, String name) {
+  public Namespace getNamespaceByName(String clusterCode, String name) {
+    KubernetesClient client = clientMap.get(clusterCode);
     try {
       return client.namespaces().withName(name).get();
     } catch (Exception e) {
+      log.debug("根据名称查询namespace失败", e);
       throw new BadRequestException(e);
     }
   }
 
   @Override
-  public Namespace createNamespace(KubernetesClient client, String name) {
+  public Namespace createNamespace(String clusterCode, String name) {
+    KubernetesClient client = clientMap.get(clusterCode);
     // 检查是否存在
     Namespace existing = client.namespaces().withName(name).get();
     if (existing != null) {
       log.debug("Namespace already exists: {}", name);
       return existing;
     }
-
     // 不存在则创建
     Namespace namespace = new NamespaceBuilder()
         .withNewMetadata()
@@ -73,7 +92,6 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
         .addToLabels(K8sLabelEnum.CREATE_BY.getCode(), SystemConst.CURRENT_APP_NAME)
         .addToLabels(K8sLabelEnum.CREATE_AT.getCode(), KitDateUtil.getNowDateTimeMsStr())
         .endMetadata().build();
-
     try {
       Namespace created = client.namespaces().resource(namespace).create();
       log.debug("Namespace created: {}", name);
@@ -89,7 +107,8 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
   }
 
   @Override
-  public Service createClusterIPService(KubernetesClient client, String contextName, String envCode, Integer servicePort) {
+  public Service createClusterIPService(String clusterCode, String contextName, String envCode, Integer servicePort) {
+    KubernetesClient client = clientMap.get(clusterCode);
     String serviceName = PilotNameUtil.getServiceName(contextName, envCode);
     // 检查是否存在
     Service existing = client.services().inNamespace(contextName).withName(serviceName).get();
@@ -156,8 +175,8 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
   }
 
   @Override
-  public StatefulSet applyStatefulSet(KubernetesClient client, String yamlContent) {
-    try {
+  public StatefulSet applyStatefulSet(String clusterCode, String yamlContent) {
+    try (KubernetesClient client = clientMap.get(clusterCode)) {
       // 加载 YAML 资源
       StatefulSet sts = client.apps().statefulSets()
           .load(yamlContent)
@@ -176,11 +195,24 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
 
   @Override
   public void afterPropertiesSet() {
+    if (isLoopCheck) {
+      ThreadUtil.execAsync(() -> {
+        while (true) {
+          this.scanClients();
+          ThreadUtil.sleep(5000);
+        }
+      });
+    } else {
+      this.scanClients();
+    }
+  }
+
+  private void scanClients() {
+    log.info("[begin]扫描并检测k8s客户端...");
     List<K8sNodeTb> k8sNodes = k8sNodeService.list();
     for (K8sNodeTb k8sNode : k8sNodes) {
       try {
-        KubernetesClient clusterClient = this.getClusterClient(k8sNode.getClusterCode());
-        this.getNamespaceByName(clusterClient, "default");
+        KubernetesClient clusterClient = this.getClient(k8sNode.getClusterCode());
         String masterUrl = clusterClient.getConfiguration().getMasterUrl();
         if (masterUrl != null && !masterUrl.isEmpty()) {
           java.net.URI uri = new java.net.URI(masterUrl);
@@ -192,11 +224,24 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
         if (kubernetesVersion != null) {
           k8sNode.setClusterVersion(kubernetesVersion.getGitVersion());
         }
-        k8sNodeService.updateStatusById(k8sNode.getId(), true, "");
+        clientMap.put(k8sNode.getClusterCode(), clusterClient);
+        k8sNodeService.update(null, new LambdaUpdateWrapper<K8sNodeTb>()
+            .eq(K8sNodeTb::getId, k8sNode.getId())
+            .set(K8sNodeTb::getHealthStatus, StatusEnum.ENABLED.getCode())
+            .set(K8sNodeTb::getClusterIp, k8sNode.getClusterIp())
+            .set(K8sNodeTb::getClusterVersion, k8sNode.getClusterVersion())
+        );
       } catch (Exception e) {
         k8sNode.setErrorMessage(e.getMessage());
-        k8sNodeService.updateStatusById(k8sNode.getId(), false, e.getMessage());
+        KubernetesClient errorClient = clientMap.remove(k8sNode.getClusterCode());
+        errorClient.close();
+        k8sNodeService.update(null, new LambdaUpdateWrapper<K8sNodeTb>()
+            .eq(K8sNodeTb::getId, k8sNode.getId())
+            .set(K8sNodeTb::getHealthStatus, StatusEnum.DISABLED.getCode())
+            .set(K8sNodeTb::getErrorMessage, e.getMessage())
+        );
       }
     }
+    log.info("[finish]扫描并检测k8s客户端...");
   }
 }

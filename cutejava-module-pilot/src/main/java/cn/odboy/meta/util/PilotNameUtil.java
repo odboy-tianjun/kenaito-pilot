@@ -23,4 +23,15 @@ public class PilotNameUtil {
   public static String getPodName(String contextName, String envCode) {
     return String.format("%s-%s-pod", contextName, envCode);
   }
+
+  /**
+   * 生成业务Pod名称
+   *
+   * @param contextName 上下文名称
+   * @param envCode     环境编码
+   * @return /
+   */
+  public static String getPodBizName(String contextName, String envCode) {
+    return String.format("%s-%s-biz", contextName, envCode);
+  }
 }

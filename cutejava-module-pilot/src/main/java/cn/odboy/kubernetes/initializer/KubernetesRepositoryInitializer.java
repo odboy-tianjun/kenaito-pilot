@@ -1,7 +1,6 @@
 package cn.odboy.kubernetes.initializer;
 
 import cn.hutool.core.thread.ThreadUtil;
-import cn.odboy.constant.SystemConst;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.kubernetes.dal.dataobject.K8sNodeTb;
 import cn.odboy.kubernetes.repository.KubernetesRepository;
@@ -9,7 +8,6 @@ import cn.odboy.kubernetes.service.K8sNodeService;
 import cn.odboy.meta.constant.K8sLabelEnum;
 import cn.odboy.meta.constant.StatusEnum;
 import cn.odboy.meta.util.PilotNameUtil;
-import cn.odboy.util.KitDateUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -77,30 +75,28 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
   }
 
   @Override
-  public Namespace createNamespace(String clusterCode, String name) {
+  public Namespace createNamespace(String clusterCode, String contextName) {
     KubernetesClient client = clientMap.get(clusterCode);
     // 检查是否存在
-    Namespace existing = client.namespaces().withName(name).get();
+    Namespace existing = client.namespaces().withName(contextName).get();
     if (existing != null) {
-      log.debug("Namespace already exists: {}", name);
+      log.debug("Namespace already exists: {}", contextName);
       return existing;
     }
     // 不存在则创建
     Namespace namespace = new NamespaceBuilder()
         .withNewMetadata()
-        .withName(name)
-        .addToLabels(K8sLabelEnum.CREATE_BY.getCode(), SystemConst.CURRENT_APP_NAME)
-        .addToLabels(K8sLabelEnum.CREATE_AT.getCode(), KitDateUtil.getNowDateTimeMsStr())
+        .withName(contextName)
         .endMetadata().build();
     try {
       Namespace created = client.namespaces().resource(namespace).create();
-      log.debug("Namespace created: {}", name);
+      log.debug("Namespace created: {}", contextName);
       return created;
     } catch (KubernetesClientException e) {
       // 处理并发创建的情况
       if (e.getCode() == 409) {
-        log.debug("Namespace was created by another process: {}", name);
-        return client.namespaces().withName(name).get();
+        log.debug("Namespace was created by another process: {}", contextName);
+        return client.namespaces().withName(contextName).get();
       }
       throw new BadRequestException(e);
     }
@@ -128,8 +124,8 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
         .withNewMetadata()
         .withName(serviceName)
         .withNamespace(contextName)
-        .addToLabels(K8sLabelEnum.CREATE_BY.getCode(), SystemConst.CURRENT_APP_NAME)
-        .addToLabels(K8sLabelEnum.CREATE_AT.getCode(), KitDateUtil.getNowDateTimeMsStr())
+        .addToLabels(K8sLabelEnum.APP.getCode(), contextName)
+        .addToLabels(K8sLabelEnum.ENV.getCode(), envCode)
         .addToLabels(K8sLabelEnum.RESOURCE_GROUP.getCode(), serviceName)
         .endMetadata()
         .withNewSpec()

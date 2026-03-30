@@ -15,9 +15,10 @@
  */
 package cn.odboy.kubernetes;
 
+import cn.odboy.kubernetes.dal.model.K8sCreateStatefulSetArgs;
 import cn.odboy.kubernetes.repository.KubernetesRepository;
+import cn.odboy.kubernetes.repository.KubernetesStatefulSetRepository;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,17 @@ public class KubernetesTests {
 
   @Autowired
   private KubernetesRepository kubernetesRepository;
+  @Autowired
+  private KubernetesStatefulSetRepository kubernetesStatefulSetRepository;
 
   @Test
   public void test1() {
     Service service = kubernetesRepository.createClusterIPService("local_test", "kenaito-pilot", "daily", 8000);
     System.err.println(service);
+  }
+
+  public void test2() {
+    K8sCreateStatefulSetArgs createStatefulSetArgs = new K8sCreateStatefulSetArgs();
+    kubernetesStatefulSetRepository.createStatefulSet(createStatefulSetArgs);
   }
 }

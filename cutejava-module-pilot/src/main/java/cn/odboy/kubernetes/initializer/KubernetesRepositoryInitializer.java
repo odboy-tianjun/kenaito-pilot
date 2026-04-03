@@ -9,18 +9,10 @@ import cn.odboy.meta.constant.K8sLabelEnum;
 import cn.odboy.meta.constant.StatusEnum;
 import cn.odboy.meta.util.PilotNameUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientBuilder;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
 import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import jakarta.annotation.Resource;
@@ -29,6 +21,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +50,8 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
    * @param clusterCode 集群编码
    * @return /
    */
-  private KubernetesClient getClient(String clusterCode) {
+  @Override
+  public KubernetesClient getClient(String clusterCode) {
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(clusterCode);
     Config config = Config.fromKubeconfig(k8sNode.getClusterClientConfig());
     return new KubernetesClientBuilder().withConfig(config).build();
@@ -192,9 +186,9 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
   @Override
   public void afterPropertiesSet() {
     if (isLoopCheck) {
-      ThreadUtil.execAsync(() -> {
+      taskExecutor.execute(() -> {
         while (true) {
-          this.scanClients();
+          KubernetesRepositoryInitializer.this.scanClients();
           ThreadUtil.sleep(5000);
         }
       });
@@ -221,20 +215,24 @@ public class KubernetesRepositoryInitializer implements InitializingBean, Kubern
           k8sNode.setClusterVersion(kubernetesVersion.getGitVersion());
         }
         clientMap.put(k8sNode.getClusterCode(), clusterClient);
-        k8sNodeService.update(null, new LambdaUpdateWrapper<K8sNodeTb>()
-            .eq(K8sNodeTb::getId, k8sNode.getId())
-            .set(K8sNodeTb::getHealthStatus, StatusEnum.ENABLED.getCode())
-            .set(K8sNodeTb::getClusterIp, k8sNode.getClusterIp())
-            .set(K8sNodeTb::getClusterVersion, k8sNode.getClusterVersion())
+        k8sNodeService.update(
+            null, new LambdaUpdateWrapper<K8sNodeTb>()
+                .eq(K8sNodeTb::getId, k8sNode.getId())
+                .set(K8sNodeTb::getHealthStatus, StatusEnum.ENABLED.getCode())
+                .set(K8sNodeTb::getClusterIp, k8sNode.getClusterIp())
+                .set(K8sNodeTb::getClusterVersion, k8sNode.getClusterVersion())
         );
       } catch (Exception e) {
         k8sNode.setErrorMessage(e.getMessage());
         KubernetesClient errorClient = clientMap.remove(k8sNode.getClusterCode());
-        errorClient.close();
-        k8sNodeService.update(null, new LambdaUpdateWrapper<K8sNodeTb>()
-            .eq(K8sNodeTb::getId, k8sNode.getId())
-            .set(K8sNodeTb::getHealthStatus, StatusEnum.DISABLED.getCode())
-            .set(K8sNodeTb::getErrorMessage, e.getMessage())
+        if (errorClient != null) {
+          errorClient.close();
+        }
+        k8sNodeService.update(
+            null, new LambdaUpdateWrapper<K8sNodeTb>()
+                .eq(K8sNodeTb::getId, k8sNode.getId())
+                .set(K8sNodeTb::getHealthStatus, StatusEnum.DISABLED.getCode())
+                .set(K8sNodeTb::getErrorMessage, e.getMessage())
         );
       }
     }

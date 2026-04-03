@@ -1,31 +1,31 @@
 package cn.odboy.kubernetes.dal.model;
 
-import cn.odboy.base.KitObject;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class K8sCreateStatefulSetArgs extends KitObject {
+public class K8sCreateStatefulSetArgs {
 
-  // 应用名称
+  @NotBlank(message = "参数 集群编码 必填")
+  private String clusterCode;
+  @NotBlank(message = "参数 应用名称 必填")
   private String contextName;
-  // 环境标识
-  private String envCode;
   // 副本数
-  private Integer replicas;
+  private Integer replicas = 1;
   // 镜像地址
   private String image;
   // 服务端口
-  private Integer port;
+  private Integer port = 8000;
   // CPU资源
-  private String cpu;
+  private String cpu = "0.5";
   // 内存资源
-  private String memory;
+  private String memory = "1Gi";
   // 存储卷大小
-  private String volumeSize;
+  private String volumeSize = "30Gi";
   // 最大不可用Pod数
-  private Integer maxUnavailable;
-  // 分区更新数
-  private Integer partition;
+  private Integer maxUnavailable = 1;
+  // 开启就绪与存活检测
+  private Boolean openLivenessCheck = false;
 }

@@ -16,6 +16,9 @@
 package cn.odboy.kubernetes;
 
 import cn.odboy.kubernetes.dal.model.K8sCreateStatefulSetArgs;
+import cn.odboy.kubernetes.dal.model.K8sDeleteStatefulSetArgs;
+import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetImageArgs;
+import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetReplicasArgs;
 import cn.odboy.kubernetes.repository.KubernetesRepository;
 import cn.odboy.kubernetes.repository.KubernetesStatefulSetRepository;
 import io.fabric8.kubernetes.api.model.Service;
@@ -35,12 +38,41 @@ public class KubernetesTests {
 
   @Test
   public void test1() {
-    Service service = kubernetesRepository.createClusterIPService("local_test", "kenaito-pilot", "daily", 8000);
+    Service service = kubernetesRepository.createClusterIPService("local_k8s_28", "kenaito-pilot", "daily", 8000);
     System.err.println(service);
   }
 
-  public void test2() {
+  @Test
+  public void testCreateStatefulSet() {
     K8sCreateStatefulSetArgs createStatefulSetArgs = new K8sCreateStatefulSetArgs();
+    createStatefulSetArgs.setClusterCode("local_k8s_31");
+    createStatefulSetArgs.setContextName("kenaito-pilot");
     kubernetesStatefulSetRepository.createStatefulSet(createStatefulSetArgs);
+  }
+
+  @Test
+  public void testUpdateStatefulSetReplicas() {
+    K8sUpdateStatefulSetReplicasArgs updateStatefulReplicasArgs = new K8sUpdateStatefulSetReplicasArgs();
+    updateStatefulReplicasArgs.setClusterCode("local_k8s_31");
+    updateStatefulReplicasArgs.setContextName("kenaito-pilot");
+    updateStatefulReplicasArgs.setReplicas(4);
+    kubernetesStatefulSetRepository.updateStatefulSetReplicas(updateStatefulReplicasArgs);
+  }
+
+  @Test
+  public void testUpdateStatefulSetImage() {
+    K8sUpdateStatefulSetImageArgs updateStatefulImageArgs = new K8sUpdateStatefulSetImageArgs();
+    updateStatefulImageArgs.setClusterCode("local_k8s_31");
+    updateStatefulImageArgs.setContextName("kenaito-pilot");
+    updateStatefulImageArgs.setImageUrl("registry.cn-shanghai.aliyuncs.com/odboy/kenaito-cicd:system-alinux3-git");
+    kubernetesStatefulSetRepository.updateStatefulSetImage(updateStatefulImageArgs);
+  }
+
+  @Test
+  public void testDeleteStatefulSet() {
+    K8sDeleteStatefulSetArgs deleteStatefulSetArgs = new K8sDeleteStatefulSetArgs();
+    deleteStatefulSetArgs.setClusterCode("local_k8s_31");
+    deleteStatefulSetArgs.setContextName("kenaito-pilot");
+    kubernetesStatefulSetRepository.deleteStatefulSet(deleteStatefulSetArgs);
   }
 }

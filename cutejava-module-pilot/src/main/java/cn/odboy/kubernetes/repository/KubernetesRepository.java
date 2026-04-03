@@ -3,8 +3,11 @@ package cn.odboy.kubernetes.repository;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.KubernetesClient;
 
 public interface KubernetesRepository {
+
+  KubernetesClient getClient(String clusterCode);
 
   /**
    * 根据命名空间名称查询

@@ -1,6 +1,6 @@
 package cn.odboy.meta.util;
 
-public class PilotNameUtil {
+public class K8sNameUtil {
 
   /**
    * 生成Service名称
@@ -11,6 +11,18 @@ public class PilotNameUtil {
    */
   public static String getServiceName(String contextName, String envCode) {
     return String.format("%s-%s-svc", contextName, envCode);
+  }
+
+  /**
+   * 生成Ingress名称
+   *
+   * @param contextName 上下文名称
+   * @param envCode     环境编码
+   * @param versionCode 版本号
+   * @return /
+   */
+  public static String getIngressName(String contextName, String envCode, String versionCode) {
+    return String.format("%s-%s-%s-ing", contextName, envCode, versionCode);
   }
 
   /**

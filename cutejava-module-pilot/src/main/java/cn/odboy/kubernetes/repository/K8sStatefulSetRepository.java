@@ -6,7 +6,7 @@ import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetImageArgs;
 import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetReplicasArgs;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
-public interface KubernetesStatefulSetRepository {
+public interface K8sStatefulSetRepository {
 
   /**
    * 创建 StatefulSet
@@ -36,4 +36,12 @@ public interface KubernetesStatefulSetRepository {
    * @param args /
    */
   void updateStatefulSetImage(K8sUpdateStatefulSetImageArgs args);
+
+  /**
+   * 从 YAML 文件创建或更新 StatefulSet
+   *
+   * @param clusterCode 集群编码
+   * @param yamlContent statefulset负载内容
+   */
+  StatefulSet applyStatefulSet(String clusterCode, String yamlContent);
 }

@@ -1,35 +1,71 @@
-package cn.odboy.kubernetes.initializer;
+package cn.odboy.kubernetes.repository;
 
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.kubernetes.dal.dataobject.K8sNodeTb;
-import cn.odboy.kubernetes.dal.model.*;
-import cn.odboy.kubernetes.repository.KubernetesRepository;
-import cn.odboy.kubernetes.repository.KubernetesStatefulSetRepository;
+import cn.odboy.kubernetes.dal.model.K8sCreateStatefulSetArgs;
+import cn.odboy.kubernetes.dal.model.K8sDeleteStatefulSetArgs;
+import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetImageArgs;
+import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetReplicasArgs;
+import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetStrategyArgs;
+import cn.odboy.kubernetes.initializer.K8sClientRepository;
 import cn.odboy.kubernetes.service.K8sNodeService;
 import cn.odboy.meta.constant.K8sLabelEnum;
-import cn.odboy.meta.util.PilotNameUtil;
+import cn.odboy.meta.util.K8sNameUtil;
 import cn.odboy.util.KitValidUtil;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.*;
+import io.fabric8.kubernetes.api.model.Affinity;
+import io.fabric8.kubernetes.api.model.AffinityBuilder;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.EmptyDirVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.ExecActionBuilder;
+import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.LabelSelector;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
+import io.fabric8.kubernetes.api.model.LabelSelectorRequirement;
+import io.fabric8.kubernetes.api.model.LabelSelectorRequirementBuilder;
+import io.fabric8.kubernetes.api.model.Lifecycle;
+import io.fabric8.kubernetes.api.model.LifecycleBuilder;
+import io.fabric8.kubernetes.api.model.LifecycleHandlerBuilder;
+import io.fabric8.kubernetes.api.model.PodAffinityTermBuilder;
+import io.fabric8.kubernetes.api.model.PodAntiAffinityBuilder;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.kubernetes.api.model.WeightedPodAffinityTerm;
+import io.fabric8.kubernetes.api.model.WeightedPodAffinityTermBuilder;
+import io.fabric8.kubernetes.api.model.apps.RollingUpdateStatefulSetStrategyBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetUpdateStrategy;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetUpdateStrategyBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
 import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Slf4j
-@Service
-public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSetRepository {
+@Component
+public class K8sStatefulSetRepositoryImpl implements K8sStatefulSetRepository {
 
   @Autowired
-  private KubernetesRepository kubernetesRepository;
-  @Autowired
   private K8sNodeService k8sNodeService;
+  @Autowired
+  private K8sNamespaceRepository k8sNamespaceRepository;
+  @Autowired
+  private K8sClientRepository k8sClientRepository;
 
   @Override
   public StatefulSet createStatefulSet(K8sCreateStatefulSetArgs args) {
@@ -37,19 +73,19 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
 
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(args.getClusterCode());
 
-    kubernetesRepository.createNamespace(args.getClusterCode(), args.getContextName());
+    k8sNamespaceRepository.createNamespace(args.getClusterCode(), args.getContextName());
 
     if (StrUtil.isBlank(args.getImage())) {
       // 设置默认镜像
       args.setImage(k8sNode.getDefaultImage());
     }
 
-    try (KubernetesClient client = kubernetesRepository.getClient(args.getClusterCode())) {
+    try (KubernetesClient client = k8sClientRepository.getClient(args.getClusterCode())) {
       StatefulSet statefulSet = new StatefulSetBuilder()
           .withApiVersion("apps/v1")
           .withKind("StatefulSet")
           .withNewMetadata()
-          .withName(PilotNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
+          .withName(K8sNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
           .withNamespace(args.getContextName())
           // StatefulSet元数据中的labels：用于标识和管理 StatefulSet 本身
           .addToLabels(K8sLabelEnum.APP.getCode(), args.getContextName())
@@ -58,7 +94,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
           .withNewSpec()
           .withReplicas(args.getReplicas())
           .withPodManagementPolicy("OrderedReady")
-          .withServiceName(PilotNameUtil.getServiceName(args.getContextName(), k8sNode.getClusterEnv()))
+          .withServiceName(K8sNameUtil.getServiceName(args.getContextName(), k8sNode.getClusterEnv()))
           .withNewSelector()
           // Selector中的matchLabels：用于将 StatefulSet 与其创建的 Pod 关联起来，确保 StatefulSet 只管理那些带有特定标签的 Pod
           .addToMatchLabels(K8sLabelEnum.APP.getCode(), args.getContextName())
@@ -102,10 +138,10 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
 
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(args.getClusterCode());
 
-    try (KubernetesClient client = kubernetesRepository.getClient(args.getClusterCode())) {
+    try (KubernetesClient client = k8sClientRepository.getClient(args.getClusterCode())) {
       StatefulSet statefulSet = client.apps().statefulSets()
           .inNamespace(args.getContextName())
-          .withName(PilotNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
+          .withName(K8sNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
           .get();
       if (statefulSet == null) {
         throw new BadRequestException("statefulset not found");
@@ -128,10 +164,10 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
 
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(args.getClusterCode());
 
-    try (KubernetesClient client = kubernetesRepository.getClient(args.getClusterCode())) {
+    try (KubernetesClient client = k8sClientRepository.getClient(args.getClusterCode())) {
       StatefulSet statefulSet = client.apps().statefulSets()
           .inNamespace(args.getContextName())
-          .withName(PilotNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
+          .withName(K8sNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
           .get();
       if (statefulSet == null) {
         throw new BadRequestException("statefulset not found");
@@ -147,7 +183,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
         // 应用更新
         Resource<StatefulSet> statefulSetResource = client.apps().statefulSets()
             .inNamespace(args.getContextName())
-            .withName(PilotNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()));
+            .withName(K8sNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()));
 
         statefulSetResource.patch(statefulSet);
 
@@ -164,10 +200,10 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
 
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(args.getClusterCode());
 
-    try (KubernetesClient client = kubernetesRepository.getClient(args.getClusterCode())) {
+    try (KubernetesClient client = k8sClientRepository.getClient(args.getClusterCode())) {
       StatefulSet statefulSet = client.apps().statefulSets()
           .inNamespace(args.getContextName())
-          .withName(PilotNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
+          .withName(K8sNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()))
           .get();
       if (statefulSet == null) {
         throw new BadRequestException("statefulset not found");
@@ -176,7 +212,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
       // 修改容器镜像
       boolean imageUpdated = false;
       String newImage = args.getImageUrl();
-      String bizContainerName = PilotNameUtil.getPodBizName(args.getContextName(), k8sNode.getClusterEnv());
+      String bizContainerName = K8sNameUtil.getPodBizName(args.getContextName(), k8sNode.getClusterEnv());
       for (Container container : statefulSet.getSpec().getTemplate().getSpec().getContainers()) {
         if (container.getName().equals(bizContainerName)) {
           container.setImage(newImage);
@@ -196,7 +232,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
       // 应用更新
       Resource<StatefulSet> statefulSetResource = client.apps().statefulSets()
           .inNamespace(args.getContextName())
-          .withName(PilotNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()));
+          .withName(K8sNameUtil.getPodName(args.getContextName(), k8sNode.getClusterEnv()));
 
       statefulSetResource.patch(statefulSet);
 
@@ -209,10 +245,10 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
 
     K8sNodeTb k8sNode = k8sNodeService.getByClusterCode(imageArgs.getClusterCode());
 
-    try (KubernetesClient client = kubernetesRepository.getClient(imageArgs.getClusterCode())) {
+    try (KubernetesClient client = k8sClientRepository.getClient(imageArgs.getClusterCode())) {
       StatefulSet statefulSet = client.apps().statefulSets()
           .inNamespace(imageArgs.getContextName())
-          .withName(PilotNameUtil.getPodName(imageArgs.getContextName(), k8sNode.getClusterEnv()))
+          .withName(K8sNameUtil.getPodName(imageArgs.getContextName(), k8sNode.getClusterEnv()))
           .get();
       if (statefulSet == null) {
         throw new BadRequestException("statefulset not found");
@@ -221,7 +257,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
       // 修改容器镜像
       boolean imageUpdated = false;
       String newImage = imageArgs.getImageUrl();
-      String bizContainerName = PilotNameUtil.getPodBizName(imageArgs.getContextName(), k8sNode.getClusterEnv());
+      String bizContainerName = K8sNameUtil.getPodBizName(imageArgs.getContextName(), k8sNode.getClusterEnv());
       for (Container container : statefulSet.getSpec().getTemplate().getSpec().getContainers()) {
         if (container.getName().equals(bizContainerName)) {
           container.setImage(newImage);
@@ -241,7 +277,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
       // 应用更新
       Resource<StatefulSet> statefulSetResource = client.apps().statefulSets()
           .inNamespace(imageArgs.getContextName())
-          .withName(PilotNameUtil.getPodName(imageArgs.getContextName(), k8sNode.getClusterEnv()));
+          .withName(K8sNameUtil.getPodName(imageArgs.getContextName(), k8sNode.getClusterEnv()));
 
       statefulSetResource.patch(statefulSet);
 
@@ -291,7 +327,7 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
    */
   private Container createContainer(String appName, String env, String image, Integer port, String cpu, String memory, boolean openLivenessCheck) {
     ContainerBuilder containerBuilder = new ContainerBuilder()
-        .withName(PilotNameUtil.getPodBizName(appName, env))
+        .withName(K8sNameUtil.getPodBizName(appName, env))
         .withImage(image)
         .withImagePullPolicy("Always")
         .withResources(this.createResources(cpu, memory))
@@ -413,5 +449,24 @@ public class KubernetesStatefulSetRepositoryImpl implements KubernetesStatefulSe
             .withPartition(partition)
             .build())
         .build();
+  }
+
+  @Override
+  public StatefulSet applyStatefulSet(String clusterCode, String yamlContent) {
+    try (KubernetesClient client = k8sClientRepository.getClient(clusterCode)) {
+      // 加载 YAML 资源
+      StatefulSet sts = client.apps().statefulSets()
+          .load(yamlContent)
+          .item();
+      // 使用 Server-Side Apply 创建或更新
+      // PatchContext 可以设置 fieldManager 和强制覆盖
+      PatchContext patchContext = PatchContext.of(PatchType.SERVER_SIDE_APPLY);
+      return client.apps().statefulSets()
+//          .inNamespace(appName)
+          .resource(sts)
+          .patch(patchContext);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to apply StatefulSet", e);
+    }
   }
 }

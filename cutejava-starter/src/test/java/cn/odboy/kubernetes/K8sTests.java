@@ -19,8 +19,9 @@ import cn.odboy.kubernetes.dal.model.K8sCreateStatefulSetArgs;
 import cn.odboy.kubernetes.dal.model.K8sDeleteStatefulSetArgs;
 import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetImageArgs;
 import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetReplicasArgs;
-import cn.odboy.kubernetes.repository.KubernetesRepository;
-import cn.odboy.kubernetes.repository.KubernetesStatefulSetRepository;
+import cn.odboy.kubernetes.initializer.K8sClientRepository;
+import cn.odboy.kubernetes.repository.K8sServiceRepository;
+import cn.odboy.kubernetes.repository.K8sStatefulSetRepository;
 import io.fabric8.kubernetes.api.model.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -29,50 +30,53 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class KubernetesTests {
+public class K8sTests {
 
   @Autowired
-  private KubernetesRepository kubernetesRepository;
+  private K8sClientRepository k8sClientRepository;
   @Autowired
-  private KubernetesStatefulSetRepository kubernetesStatefulSetRepository;
+  private K8sStatefulSetRepository k8sStatefulSetRepository;
+  @Autowired
+  private K8sServiceRepository k8sServiceRepository;
 
   @Test
-  public void test1() {
-    Service service = kubernetesRepository.createClusterIPService("local_k8s_28", "kenaito-pilot", "daily", 8000);
+  public void testCreateClusterIPService() {
+    Service service = k8sServiceRepository.createClusterIPService("local_k8s_28", "kenaito-pilot", 8000);
     System.err.println(service);
   }
 
   @Test
   public void testCreateStatefulSet() {
     K8sCreateStatefulSetArgs createStatefulSetArgs = new K8sCreateStatefulSetArgs();
-    createStatefulSetArgs.setClusterCode("local_k8s_31");
+    createStatefulSetArgs.setClusterCode("local_k8s_28");
     createStatefulSetArgs.setContextName("kenaito-pilot");
-    kubernetesStatefulSetRepository.createStatefulSet(createStatefulSetArgs);
+    createStatefulSetArgs.setImage("registry.cn-shanghai.aliyuncs.com/odboy/kenaito-cicd:system-alinux3");
+    k8sStatefulSetRepository.createStatefulSet(createStatefulSetArgs);
   }
 
   @Test
   public void testUpdateStatefulSetReplicas() {
     K8sUpdateStatefulSetReplicasArgs updateStatefulReplicasArgs = new K8sUpdateStatefulSetReplicasArgs();
-    updateStatefulReplicasArgs.setClusterCode("local_k8s_31");
+    updateStatefulReplicasArgs.setClusterCode("local_k8s_28");
     updateStatefulReplicasArgs.setContextName("kenaito-pilot");
     updateStatefulReplicasArgs.setReplicas(4);
-    kubernetesStatefulSetRepository.updateStatefulSetReplicas(updateStatefulReplicasArgs);
+    k8sStatefulSetRepository.updateStatefulSetReplicas(updateStatefulReplicasArgs);
   }
 
   @Test
   public void testUpdateStatefulSetImage() {
     K8sUpdateStatefulSetImageArgs updateStatefulImageArgs = new K8sUpdateStatefulSetImageArgs();
-    updateStatefulImageArgs.setClusterCode("local_k8s_31");
+    updateStatefulImageArgs.setClusterCode("local_k8s_28");
     updateStatefulImageArgs.setContextName("kenaito-pilot");
     updateStatefulImageArgs.setImageUrl("registry.cn-shanghai.aliyuncs.com/odboy/kenaito-cicd:system-alinux3-git");
-    kubernetesStatefulSetRepository.updateStatefulSetImage(updateStatefulImageArgs);
+    k8sStatefulSetRepository.updateStatefulSetImage(updateStatefulImageArgs);
   }
 
   @Test
   public void testDeleteStatefulSet() {
     K8sDeleteStatefulSetArgs deleteStatefulSetArgs = new K8sDeleteStatefulSetArgs();
-    deleteStatefulSetArgs.setClusterCode("local_k8s_31");
+    deleteStatefulSetArgs.setClusterCode("local_k8s_28");
     deleteStatefulSetArgs.setContextName("kenaito-pilot");
-    kubernetesStatefulSetRepository.deleteStatefulSet(deleteStatefulSetArgs);
+    k8sStatefulSetRepository.deleteStatefulSet(deleteStatefulSetArgs);
   }
 }

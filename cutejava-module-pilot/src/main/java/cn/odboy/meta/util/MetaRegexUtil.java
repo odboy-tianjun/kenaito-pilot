@@ -19,9 +19,9 @@ import cn.hutool.core.util.ReUtil;
 import cn.odboy.framework.exception.BadRequestException;
 
 /**
- * 正则表达式工具
+ * 元数据正则表达校验工具
  */
-public class PilotRegexUtil {
+public class MetaRegexUtil {
 
   /**
    * 校验应用名称

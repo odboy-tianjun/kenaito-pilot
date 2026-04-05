@@ -15,36 +15,34 @@
  */
 package cn.odboy.kubernetes;
 
+import cn.odboy.kubernetes.dal.model.K8sCreateIngressArgs;
 import cn.odboy.kubernetes.dal.model.K8sCreateStatefulSetArgs;
 import cn.odboy.kubernetes.dal.model.K8sDeleteStatefulSetArgs;
 import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetImageArgs;
 import cn.odboy.kubernetes.dal.model.K8sUpdateStatefulSetReplicasArgs;
-import cn.odboy.kubernetes.initializer.K8sClientRepository;
+import cn.odboy.kubernetes.repository.K8sIngressRepository;
 import cn.odboy.kubernetes.repository.K8sServiceRepository;
 import cn.odboy.kubernetes.repository.K8sStatefulSetRepository;
 import io.fabric8.kubernetes.api.model.Service;
-import lombok.extern.slf4j.Slf4j;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class K8sTests {
 
   @Autowired
-  private K8sClientRepository k8sClientRepository;
-  @Autowired
   private K8sStatefulSetRepository k8sStatefulSetRepository;
   @Autowired
   private K8sServiceRepository k8sServiceRepository;
+  @Autowired
+  private K8sIngressRepository k8sIngressRepository;
 
-  @Test
-  public void testCreateClusterIPService() {
-    Service service = k8sServiceRepository.createClusterIPService("local_k8s_28", "kenaito-pilot", 8000);
-    System.err.println(service);
-  }
-
+  /**
+   * Test Pass
+   */
   @Test
   public void testCreateStatefulSet() {
     K8sCreateStatefulSetArgs createStatefulSetArgs = new K8sCreateStatefulSetArgs();
@@ -54,6 +52,9 @@ public class K8sTests {
     k8sStatefulSetRepository.createStatefulSet(createStatefulSetArgs);
   }
 
+  /**
+   * Test Pass
+   */
   @Test
   public void testUpdateStatefulSetReplicas() {
     K8sUpdateStatefulSetReplicasArgs updateStatefulReplicasArgs = new K8sUpdateStatefulSetReplicasArgs();
@@ -63,6 +64,9 @@ public class K8sTests {
     k8sStatefulSetRepository.updateStatefulSetReplicas(updateStatefulReplicasArgs);
   }
 
+  /**
+   * Test Pass
+   */
   @Test
   public void testUpdateStatefulSetImage() {
     K8sUpdateStatefulSetImageArgs updateStatefulImageArgs = new K8sUpdateStatefulSetImageArgs();
@@ -72,11 +76,50 @@ public class K8sTests {
     k8sStatefulSetRepository.updateStatefulSetImage(updateStatefulImageArgs);
   }
 
+  /**
+   * Test Pass
+   */
   @Test
   public void testDeleteStatefulSet() {
     K8sDeleteStatefulSetArgs deleteStatefulSetArgs = new K8sDeleteStatefulSetArgs();
     deleteStatefulSetArgs.setClusterCode("local_k8s_28");
     deleteStatefulSetArgs.setContextName("kenaito-pilot");
     k8sStatefulSetRepository.deleteStatefulSet(deleteStatefulSetArgs);
+  }
+
+  /**
+   * Test Pass
+   */
+  @Test
+  public void testFull() {
+    String clusterCode = "local_k8s_28";
+    String contextName = "kenaito-pilot";
+    String imageName = "registry.cn-shanghai.aliyuncs.com/odboy/kenaito-cicd:system-alinux3";
+    Integer replicas = 3;
+    Integer servicePort = 22;
+
+    // 创建StatefulSet
+    K8sCreateStatefulSetArgs createStatefulSetArgs = new K8sCreateStatefulSetArgs();
+    createStatefulSetArgs.setClusterCode(clusterCode);
+    createStatefulSetArgs.setContextName(contextName);
+    createStatefulSetArgs.setImage(imageName);
+    createStatefulSetArgs.setReplicas(replicas);
+    StatefulSet statefulSet = k8sStatefulSetRepository.createStatefulSet(createStatefulSetArgs);
+    System.err.println("=================== StatefulSet ==============================");
+    System.err.println(statefulSet);
+    // 创建Service
+    Service service = k8sServiceRepository.createClusterIPService(clusterCode, contextName, servicePort);
+    System.err.println("=================== Service ==============================");
+    System.err.println(service);
+    // 创建ingress
+    K8sCreateIngressArgs createIngressArgs = new K8sCreateIngressArgs();
+    createIngressArgs.setClusterCode(clusterCode);
+    createIngressArgs.setContextName(contextName);
+    createIngressArgs.setHost("kenaito-pilot-api.com");
+    createIngressArgs.setPath("/");
+    createIngressArgs.setServiceName(service.getMetadata().getName());
+    Ingress ingress = k8sIngressRepository.createIngress(createIngressArgs);
+    System.err.println("=================== Ingress ==============================");
+    System.err.println(ingress);
   }
 }

@@ -53,7 +53,7 @@ public class K8sIngressRepositoryImpl implements K8sIngressRepository {
           .addToAnnotations("nginx.ingress.kubernetes.io/app.name", args.getContextName())
           .endMetadata()
           .withNewSpec()
-          // 这里用的是ingress-nginx
+          // 这里用的是ingress-nginx。ingressClassName 字段用于明确指定由哪个 Controller 来处理这个 Ingress 资源
           .withIngressClassName("nginx")
           .addNewRule()
           .withHost(args.getHost())

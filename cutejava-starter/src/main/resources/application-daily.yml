@@ -185,6 +185,8 @@ app:
     - "org.springframework"
     - "cn.odboy.system.dal.dataobject"
     - "cn.odboy.system.dal.model"
+    - "cn.odboy.pipeline.dal.dataobject"
+    - "cn.odboy.pipeline.dal.model"
     - "cn.odboy.app.dal.dataobject"
     - "cn.odboy.app.dal.model"
     - "cn.odboy.gitlab.dal.dataobject"

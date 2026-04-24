@@ -1,8 +1,8 @@
 spring:
   profiles:
     # 激活的环境
-    active: daily
-#    active: daily,quartz
+#    active: daily
+    active: daily,quartz
 gitlab:
   pipeline:
     wait-seconds: 5

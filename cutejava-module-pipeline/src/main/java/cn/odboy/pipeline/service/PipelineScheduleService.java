@@ -47,7 +47,7 @@ public class PipelineScheduleService {
     PipelineInstanceTb instance = new PipelineInstanceTb();
     instance.setStatus(PipelineStatusEnum.PENDING.getCode());
     instance.setRuntimeParams(JSON.toJSONString(inputParams));
-    instance.setCurrentNodeCode(nodes.get(0).getCode());
+    instance.setCurrentNodeCode(nodes.getFirst().getCode());
     instance.setCurrentNodeStatus(PipelineStatusEnum.PENDING.getCode());
     instance.setNodeJson(JSON.toJSONString(nodes));
     instance.setCreateTime(new Date());

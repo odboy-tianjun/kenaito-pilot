@@ -1,7 +1,6 @@
 package cn.odboy.pipeline.core;
 
 import cn.odboy.pipeline.constant.PipelineStatusEnum;
-import cn.odboy.pipeline.core.PipelineContext;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceNodeTb;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
 import cn.odboy.pipeline.dal.mysql.PipelineInstanceMapper;

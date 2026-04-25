@@ -30,8 +30,8 @@ public class PipelineTemplateContextTb extends KitBaseUserCreateTimeTb {
    * id
    */
   @ApiModelProperty("id")
-  @TableId(value = "id", type = IdType.AUTO)
-  private Long id;
+  @TableId(value = "id", type = IdType.ASSIGN_ID)
+  private String id;
 
   /**
    * 集群类型(k8s、host)

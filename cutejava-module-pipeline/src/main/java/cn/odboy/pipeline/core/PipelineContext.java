@@ -1,14 +1,17 @@
 package cn.odboy.pipeline.core;
 
-import lombok.Data;
+import cn.odboy.base.KitObject;
+import lombok.Getter;
+import lombok.Setter;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 全局上下文
  */
-@Data
-public class PipelineContext {
+@Getter
+@Setter
+public class PipelineContext extends KitObject {
 
   private String taskStatus;
   private final Map<String, Object> params = new HashMap<>();

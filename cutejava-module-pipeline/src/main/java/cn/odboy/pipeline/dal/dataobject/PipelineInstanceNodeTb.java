@@ -21,41 +21,48 @@ public class PipelineInstanceNodeTb {
   /**
    * 所属流水线实例ID（关联pipeline_instance.id）
    */
+  @TableField(value = "instance_id")
   private String instanceId;
 
   /**
    * 节点业务编码（对应@Service的code）
    */
+  @TableField(value = "biz_code")
   private String bizCode;
 
   /**
    * 节点业务名称
    */
+  @TableField(value = "biz_name")
   private String bizName;
 
   /**
    * 节点开始执行时间
    */
+  @TableField(value = "start_time")
   private Date startTime;
 
   /**
    * 节点结束执行时间
    */
+  @TableField(value = "finish_time")
   private Date finishTime;
 
   /**
    * 节点执行参数（节点运行时接收的参数，JSON格式存储）
    */
+  @TableField(value = "execute_params")
   private String executeParams;
 
   /**
    * 节点执行信息（执行日志、结果描述、异常信息等）
    */
+  @TableField(value = "execute_info")
   private String executeInfo;
-
   /**
    * 节点执行状态：pending-待执行 running-执行中 success-执行成功 failure-失败/停止
    */
+  @TableField(value = "execute_status")
   private String executeStatus;
 
   @TableField(value = "create_time", fill = FieldFill.INSERT)

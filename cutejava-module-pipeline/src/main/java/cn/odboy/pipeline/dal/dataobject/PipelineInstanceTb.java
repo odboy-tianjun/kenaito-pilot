@@ -25,7 +25,7 @@ public class PipelineInstanceTb {
   /**
    * 创建人
    */
-  @TableField(value = "create_time", fill = FieldFill.INSERT)
+  @TableField(value = "create_by", fill = FieldFill.INSERT)
   private String createBy;
 
   /**

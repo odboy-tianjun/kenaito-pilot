@@ -12,7 +12,7 @@
         <module>cutejava-framework</module>
         <module>cutejava-module-system</module>
         <module>cutejava-module-pipeline</module>
-        <module>cutejava-module-pilot</module>
+<!--        <module>cutejava-module-pilot</module>-->
         <module>cutejava-starter</module>
     </modules>
 

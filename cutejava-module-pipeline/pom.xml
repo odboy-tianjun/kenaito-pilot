@@ -12,7 +12,7 @@
     <dependencies>
         <dependency>
             <groupId>cn.odboy</groupId>
-            <artifactId>cutejava-framework</artifactId>
+            <artifactId>cutejava-module-system</artifactId>
             <version>1.5.2</version>
         </dependency>
     </dependencies>

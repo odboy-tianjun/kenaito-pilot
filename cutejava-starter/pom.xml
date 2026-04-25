@@ -17,11 +17,11 @@
             <artifactId>cutejava-module-pipeline</artifactId>
             <version>1.5.2</version>
         </dependency>
-        <dependency>
-            <groupId>cn.odboy</groupId>
-            <artifactId>cutejava-module-pilot</artifactId>
-            <version>1.5.2</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>cn.odboy</groupId>-->
+<!--            <artifactId>cutejava-module-pilot</artifactId>-->
+<!--            <version>1.5.2</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <!-- 打包 -->

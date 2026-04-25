@@ -63,7 +63,7 @@ public class GenCode {
   private static void genPipelineCode(KitMpCmdGenUtil generator) {
     generator.gen("pipeline", "", List.of(
         "pipeline_template",
-        "pipeline_context_template",
+        "pipeline_template_context",
         "pipeline_instance",
         "pipeline_instance_node"
     ));

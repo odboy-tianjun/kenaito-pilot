@@ -1,6 +1,5 @@
-package cn.odboy.pipeline.dal.mysql;
+package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.dal.dataobject.PipelineInstanceNodeTb;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;

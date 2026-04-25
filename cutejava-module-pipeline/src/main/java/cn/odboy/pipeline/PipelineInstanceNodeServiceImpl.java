@@ -1,22 +1,11 @@
-package cn.odboy.pipeline.service.impl;
+package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
-import cn.odboy.pipeline.dal.dataobject.PipelineInstanceNodeTb;
-import cn.odboy.pipeline.dal.mysql.PipelineInstanceNodeMapper;
-import cn.odboy.pipeline.service.PipelineInstanceNodeService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import java.util.Date;
+import java.util.List;
 
-/**
- * <p>
- * 流水线实例节点 服务实现类
- * </p>
- *
- * @author codegen
- * @since 2026-04-25
- */
 @Service
 public class PipelineInstanceNodeServiceImpl extends ServiceImpl<PipelineInstanceNodeMapper, PipelineInstanceNodeTb> implements PipelineInstanceNodeService {
 
@@ -26,7 +15,6 @@ public class PipelineInstanceNodeServiceImpl extends ServiceImpl<PipelineInstanc
     wrapper.eq(PipelineInstanceNodeTb::getInstanceId, instanceId);
     wrapper.eq(PipelineInstanceNodeTb::getBizCode, nodeCode);
     wrapper.set(PipelineInstanceNodeTb::getExecuteStatus, PipelineStatusEnum.RUNNING.getCode());
-    wrapper.set(PipelineInstanceNodeTb::getExecuteInfo, "");
     wrapper.set(PipelineInstanceNodeTb::getStartTime, new Date());
     wrapper.set(PipelineInstanceNodeTb::getFinishTime, null);
     update(wrapper);
@@ -38,7 +26,6 @@ public class PipelineInstanceNodeServiceImpl extends ServiceImpl<PipelineInstanc
     wrapper.eq(PipelineInstanceNodeTb::getInstanceId, instanceId);
     wrapper.eq(PipelineInstanceNodeTb::getBizCode, nodeCode);
     wrapper.set(PipelineInstanceNodeTb::getExecuteStatus, PipelineStatusEnum.SUCCESS.getCode());
-    wrapper.set(PipelineInstanceNodeTb::getExecuteInfo, "");
     wrapper.set(PipelineInstanceNodeTb::getFinishTime, new Date());
     update(wrapper);
   }
@@ -51,6 +38,26 @@ public class PipelineInstanceNodeServiceImpl extends ServiceImpl<PipelineInstanc
     wrapper.set(PipelineInstanceNodeTb::getExecuteStatus, PipelineStatusEnum.FAILURE.getCode());
     wrapper.set(PipelineInstanceNodeTb::getExecuteInfo, executeInfo);
     wrapper.set(PipelineInstanceNodeTb::getFinishTime, new Date());
+    update(wrapper);
+  }
+
+  @Override
+  public List<PipelineInstanceNodeTb> listByInstanceId(String instanceId) {
+    return lambdaQuery().eq(PipelineInstanceNodeTb::getInstanceId, instanceId).list();
+  }
+
+  // ======================
+  // 【重试专用】重置为 PENDING
+  // ======================
+  @Override
+  public void updateStatusPending(String instanceId, String nodeCode) {
+    LambdaUpdateWrapper<PipelineInstanceNodeTb> wrapper = new LambdaUpdateWrapper<>();
+    wrapper.eq(PipelineInstanceNodeTb::getInstanceId, instanceId);
+    wrapper.eq(PipelineInstanceNodeTb::getBizCode, nodeCode);
+    wrapper.set(PipelineInstanceNodeTb::getExecuteStatus, PipelineStatusEnum.PENDING.getCode());
+    wrapper.set(PipelineInstanceNodeTb::getStartTime, null);
+    wrapper.set(PipelineInstanceNodeTb::getFinishTime, null);
+    wrapper.set(PipelineInstanceNodeTb::getExecuteInfo, "");
     update(wrapper);
   }
 }

@@ -1,6 +1,5 @@
-package cn.odboy.pipeline.dal.dataobject;
+package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

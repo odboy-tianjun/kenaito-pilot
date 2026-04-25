@@ -1,4 +1,4 @@
-package cn.odboy.pipeline.dal.dataobject;
+package cn.odboy.pipeline;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

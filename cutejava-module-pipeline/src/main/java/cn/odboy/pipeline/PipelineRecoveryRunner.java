@@ -1,8 +1,5 @@
 package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
-import cn.odboy.pipeline.dal.mysql.PipelineInstanceMapper;
-import cn.odboy.pipeline.core.PipelineScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

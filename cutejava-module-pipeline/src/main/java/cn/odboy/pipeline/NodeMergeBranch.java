@@ -1,7 +1,5 @@
-package cn.odboy.pipeline.test;
+package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.core.BasePipelineNode;
-import cn.odboy.pipeline.core.PipelineContext;
 import org.springframework.stereotype.Service;
 
 @Service("node_merge_branch")

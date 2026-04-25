@@ -1,4 +1,4 @@
-package cn.odboy.pipeline.dal.model;
+package cn.odboy.pipeline;
 
 import lombok.Data;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package cn.odboy.pipeline.constant;
+package cn.odboy.pipeline;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

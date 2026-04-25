@@ -1,4 +1,4 @@
-package cn.odboy.pipeline.dal.dataobject;
+package cn.odboy.pipeline;
 
 import cn.odboy.base.KitBaseUserTimeTb;
 import com.baomidou.mybatisplus.annotation.IdType;

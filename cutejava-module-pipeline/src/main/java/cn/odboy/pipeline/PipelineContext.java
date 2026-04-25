@@ -1,4 +1,4 @@
-package cn.odboy.pipeline.core;
+package cn.odboy.pipeline;
 
 import cn.odboy.base.KitObject;
 import lombok.Getter;

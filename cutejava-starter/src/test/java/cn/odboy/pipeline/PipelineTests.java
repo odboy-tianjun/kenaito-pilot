@@ -16,10 +16,6 @@
 package cn.odboy.pipeline;
 
 import cn.odboy.framework.exception.BadRequestException;
-import cn.odboy.pipeline.core.PipelineScheduleService;
-import cn.odboy.pipeline.dal.dataobject.PipelineTemplateContextTb;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
-import cn.odboy.pipeline.service.PipelineTemplateContextService;
 import com.alibaba.fastjson2.JSON;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;

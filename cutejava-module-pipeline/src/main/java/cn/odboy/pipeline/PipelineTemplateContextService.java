@@ -1,6 +1,5 @@
-package cn.odboy.pipeline.service;
+package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.dal.dataobject.PipelineTemplateContextTb;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

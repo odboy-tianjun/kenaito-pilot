@@ -1,8 +1,5 @@
-package cn.odboy.pipeline.service.impl;
+package cn.odboy.pipeline;
 
-import cn.odboy.pipeline.dal.dataobject.PipelineTemplateTb;
-import cn.odboy.pipeline.dal.mysql.PipelineTemplateMapper;
-import cn.odboy.pipeline.service.PipelineTemplateService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 

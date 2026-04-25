@@ -578,7 +578,7 @@ public class GitlabRepositoryInitializer implements InitializingBean, GitlabRepo
       }
       // 分支存在冲突
       if (Constants.MergeRequestState.OPENED.toValue().equals(mergeRequest.getState()) && mergeRequest.getHasConflicts()) {
-        // 在线解决冲突地址 http://219.151.187.115:5000/test1/asdasd/-/merge_requests/7/conflicts
+        // 在线解决冲突地址 http://192.168.235.128:5000/test1/asdasd/-/merge_requests/7/conflicts
         throw new BadRequestException(String.format("%s 与 %s 存在冲突", sourceBranch, targetBranch));
       }
       // 允许合并

@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class GenCode {
 
-  private static final String ADDR = "127.0.0.1";
+  private static final String ADDR = "192.168.235.128";
   private static final Integer PORT = 3306;
   private static final String DATABASE_NAME = "kenaito_pilot";
   private static final String DATABASE_USER = "root";
@@ -42,6 +42,7 @@ public class GenCode {
     genHostCode(generator);
     genAppCode(generator);
     genGitlabCode(generator);
+    genPipelineCode(generator);
   }
 
   private static void genK8sCode(KitMpCmdGenUtil generator) {
@@ -58,5 +59,13 @@ public class GenCode {
 
   private static void genGitlabCode(KitMpCmdGenUtil generator) {
     generator.gen("gitlab", "", List.of("gitlab_site_config"));
+  }
+  private static void genPipelineCode(KitMpCmdGenUtil generator) {
+    generator.gen("pipeline", "", List.of(
+        "pipeline_template",
+        "pipeline_template_context",
+        "pipeline_instance",
+        "pipeline_instance_node"
+    ));
   }
 }

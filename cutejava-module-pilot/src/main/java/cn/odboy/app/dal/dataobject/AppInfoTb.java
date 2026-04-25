@@ -79,6 +79,13 @@ public class AppInfoTb extends KitBaseUserTimeTb {
     private Date offlineTime;
 
     /**
+     * 下线原因
+     */
+    @ApiModelProperty("下线原因")
+    @TableField("offline_reason")
+    private String offlineReason;
+
+    /**
      * 应用负责人
      */
     @TableField("`owner`")

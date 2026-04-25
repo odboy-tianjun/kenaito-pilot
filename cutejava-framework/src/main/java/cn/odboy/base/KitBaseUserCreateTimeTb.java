@@ -34,8 +34,7 @@ public class KitBaseUserCreateTimeTb extends KitObject {
   @CreatedBy
   @TableField(fill = FieldFill.INSERT)
   @ApiModelProperty(value = "创建人", hidden = true)
-  private String
-      createBy;
+  private String createBy;
   @TableField(fill = FieldFill.INSERT)
   @ApiModelProperty(value = "创建时间: yyyy-MM-dd HH:mm:ss", hidden = true)
   private Date createTime;

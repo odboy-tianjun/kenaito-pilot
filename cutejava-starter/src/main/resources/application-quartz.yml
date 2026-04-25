@@ -4,12 +4,15 @@ spring:
   quartz:
     # 必需，指定使用 JDBC 存储
     job-store-type: jdbc
+    jdbc:
+      # 必需，手动初始化Quartz表
+      initialize-schema: never
     properties:
       org:
         quartz:
           scheduler:
             # 必需，指定调度器实例的名称
-            instanceName: KenaitoPilot
+            instanceName: KenaitoPilotScheduler
             # 必需，指定调度器实例的 ID
             instanceId: AUTO
           threadPool:
@@ -27,7 +30,7 @@ spring:
             jobStoreDataSource:
               provider: hikaricp
               driver: com.mysql.cj.jdbc.Driver
-              URL: jdbc:mysql://127.0.0.1:3306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+              URL: jdbc:mysql://192.168.235.128:3306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
               user: root
               password: kd123456789
               maxConnections: 10
@@ -38,7 +41,7 @@ spring:
             # 可选，集群检查间隔时间，可以根据需要调整
             clusterCheckinInterval: 10000
             # 可选，分布式事务类
-            #            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
             # 必需，指定 JDBC 驱动代理类
             driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
             # 可选，是否使用属性存储，可以根据需要调整

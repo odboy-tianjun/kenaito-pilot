@@ -53,6 +53,9 @@ public class PipelineExecutor {
       log.info("执行第{}个节点: {} ({})", i + 1, node.getName(), node.getCode());
 
       try {
+        // 更新当前执行节点信息
+        updateCurrentNode(instanceId, node.getCode(), PipelineStatusEnum.RUNNING.getCode());
+        
         // 执行单个节点
         executeNode(instanceId, node, inputParams);
         log.info("节点执行成功: {}", node.getCode());
@@ -215,6 +218,23 @@ public class PipelineExecutor {
       nodeInstance.setExecuteInfo(message);
       pipelineInstanceNodeService.updateById(nodeInstance);
     }
+  }
+
+  /**
+   * 更新当前执行节点信息
+   *
+   * @param instanceId    实例ID
+   * @param currentNodeCode 当前节点编码
+   * @param currentNodeStatus 当前节点状态
+   */
+  private void updateCurrentNode(String instanceId, String currentNodeCode, String currentNodeStatus) {
+    PipelineInstanceTb instance = new PipelineInstanceTb();
+    instance.setId(instanceId);
+    instance.setCurrentNodeCode(currentNodeCode);
+    instance.setCurrentNodeStatus(currentNodeStatus);
+    instance.setUpdateTime(new Date());
+    pipelineInstanceService.updateById(instance);
+    log.debug("更新当前节点: {}, 状态: {}", currentNodeCode, currentNodeStatus);
   }
 
   /**

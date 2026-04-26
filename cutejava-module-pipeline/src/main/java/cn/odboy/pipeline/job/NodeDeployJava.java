@@ -6,7 +6,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.UnableToInterruptJobException;
 import org.springframework.stereotype.Service;
-
 import java.util.Map;
 
 /**
@@ -49,7 +48,7 @@ public class NodeDeployJava implements InterruptableJob {
         return;
       }
 
-      log.info("Java应用部署成功");
+      execute(context.getMergedJobDataMap());
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

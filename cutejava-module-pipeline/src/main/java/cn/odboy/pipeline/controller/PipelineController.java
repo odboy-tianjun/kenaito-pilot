@@ -8,15 +8,18 @@ import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineTemplateContextService;
 import com.alibaba.fastjson2.JSON;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/pipeline")
 public class PipelineController {
@@ -46,5 +49,19 @@ public class PipelineController {
     String instanceId = pipelineScheduleService.startPipeline(nodes, inputParams);
 
     return ResponseEntity.ok(instanceId);
+  }
+
+  @ApiOperation("重试节点")
+  @AnonymousPostMapping(value = "/retry")
+  public ResponseEntity<?> retryNode(@RequestParam String instanceId, @RequestParam String nodeCode) {
+    log.info("请求重试节点，实例ID: {}, 节点: {}", instanceId, nodeCode);
+    
+    boolean success = pipelineScheduleService.retryNode(instanceId, nodeCode);
+    
+    if (success) {
+      return ResponseEntity.ok("节点重试已触发");
+    } else {
+      return ResponseEntity.badRequest().body("节点重试失败");
+    }
   }
 }

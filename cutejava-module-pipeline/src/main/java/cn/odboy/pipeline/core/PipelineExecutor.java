@@ -80,6 +80,72 @@ public class PipelineExecutor {
   }
 
   /**
+   * 从指定节点开始重试执行
+   *
+   * @param instanceId  流水线实例ID
+   * @param nodes       节点定义列表
+   * @param startNodeCode 起始节点编码（从该节点开始执行）
+   * @param inputParams 输入参数
+   */
+  public void retryFromNode(String instanceId, List<NodeDefinition> nodes, String startNodeCode, Map<String, Object> inputParams) {
+    log.info("开始重试流水线，实例ID: {}, 起始节点: {}", instanceId, startNodeCode);
+
+    // 查找起始节点的索引
+    int startIndex = -1;
+    for (int i = 0; i < nodes.size(); i++) {
+      if (nodes.get(i).getCode().equals(startNodeCode)) {
+        startIndex = i;
+        break;
+      }
+    }
+
+    if (startIndex == -1) {
+      throw new IllegalArgumentException("找不到节点: " + startNodeCode);
+    }
+
+    // 更新实例状态为运行中
+    PipelineInstanceTb instance = new PipelineInstanceTb();
+    instance.setId(instanceId);
+    instance.setStatus(PipelineStatusEnum.RUNNING.getCode());
+    instance.setUpdateTime(new Date());
+    pipelineInstanceService.updateById(instance);
+
+    // 重置起始节点及后续节点的状态
+    resetNodeStatus(instanceId, nodes, startIndex);
+
+    // 从起始节点开始执行
+    for (int i = startIndex; i < nodes.size(); i++) {
+      NodeDefinition node = nodes.get(i);
+      log.info("重试执行第{}个节点: {} ({})", i + 1, node.getName(), node.getCode());
+
+      try {
+        // 更新当前执行节点信息
+        updateCurrentNode(instanceId, node.getCode(), PipelineStatusEnum.RUNNING.getCode());
+        
+        // 执行单个节点
+        executeNode(instanceId, node, inputParams);
+        log.info("节点重试成功: {}", node.getCode());
+      } catch (Exception e) {
+        log.error("节点重试失败: {}, 错误信息: {}", node.getCode(), e.getMessage(), e);
+
+        // 更新节点状态为失败
+        updateNodeStatus(instanceId, node.getCode(), PipelineStatusEnum.FAILURE.getCode(), e.getMessage());
+
+        // 更新实例状态为失败
+        updateInstanceStatus(instanceId, PipelineStatusEnum.FAILURE.getCode(), node.getCode());
+
+        // 终止后续节点执行
+        log.warn("节点 {} 重试失败，终止后续节点执行", node.getCode());
+        throw new RuntimeException("流水线重试失败，节点: " + node.getCode(), e);
+      }
+    }
+
+    // 所有节点执行成功，更新实例状态为成功
+    updateInstanceStatus(instanceId, PipelineStatusEnum.SUCCESS.getCode(), null);
+    log.info("流水线重试成功，实例ID: {}", instanceId);
+  }
+
+  /**
    * 执行单个节点
    *
    * @param instanceId  实例ID
@@ -235,6 +301,36 @@ public class PipelineExecutor {
     instance.setUpdateTime(new Date());
     pipelineInstanceService.updateById(instance);
     log.debug("更新当前节点: {}, 状态: {}", currentNodeCode, currentNodeStatus);
+  }
+
+  /**
+   * 重置起始节点及后续节点的状态
+   *
+   * @param instanceId 实例ID
+   * @param nodes      节点列表
+   * @param startIndex 起始索引
+   */
+  private void resetNodeStatus(String instanceId, List<NodeDefinition> nodes, int startIndex) {
+    for (int i = startIndex; i < nodes.size(); i++) {
+      String nodeCode = nodes.get(i).getCode();
+      
+      // 查询节点实例
+      PipelineInstanceNodeTb nodeInstance = pipelineInstanceNodeService.lambdaQuery()
+          .eq(PipelineInstanceNodeTb::getInstanceId, instanceId)
+          .eq(PipelineInstanceNodeTb::getBizCode, nodeCode)
+          .one();
+
+      if (nodeInstance != null) {
+        // 重置节点状态为pending，清空执行信息
+        nodeInstance.setExecuteStatus(PipelineStatusEnum.PENDING.getCode());
+        nodeInstance.setStartTime(null);
+        nodeInstance.setFinishTime(null);
+        nodeInstance.setExecuteInfo(null);
+        nodeInstance.setUpdateTime(new Date());
+        pipelineInstanceNodeService.updateById(nodeInstance);
+        log.debug("重置节点状态: {}", nodeCode);
+      }
+    }
   }
 
   /**

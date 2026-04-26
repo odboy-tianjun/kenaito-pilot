@@ -1,6 +1,7 @@
 package cn.odboy.pipeline.core.impl;
 
 import cn.odboy.pipeline.core.PipelineExecutionJob;
+import cn.odboy.pipeline.core.PipelineExecutor;
 import cn.odboy.pipeline.core.PipelineScheduleService;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
@@ -31,6 +32,9 @@ public class PipelineScheduleServiceImpl implements PipelineScheduleService {
 
   @Autowired
   private PipelineInstanceService pipelineInstanceService;
+
+  @Autowired
+  private PipelineExecutor pipelineExecutor;
 
   /**
    * 启动流水线 - 立即执行
@@ -118,5 +122,90 @@ public class PipelineScheduleServiceImpl implements PipelineScheduleService {
     // 调度Job
     scheduler.scheduleJob(jobDetail, trigger);
     log.info("流水线Job已加入调度队列，实例ID: {}", instanceId);
+  }
+
+  /**
+   * 重试失败的节点
+   *
+   * @param instanceId 流水线实例ID
+   * @param nodeCode   要重试的节点编码
+   * @return 是否触发重试
+   */
+  @Override
+  public boolean retryNode(String instanceId, String nodeCode) {
+    log.info("准备重试节点，实例ID: {}, 节点: {}", instanceId, nodeCode);
+
+    // 1. 查询流水线实例
+    PipelineInstanceTb instance = pipelineInstanceService.getById(instanceId);
+    if (instance == null) {
+      log.error("流水线实例不存在: {}", instanceId);
+      return false;
+    }
+
+    // 2. 检查实例状态是否为失败
+    if (!"failure".equals(instance.getStatus())) {
+      log.warn("流水线状态不是失败，无法重试: {}", instance.getStatus());
+      return false;
+    }
+
+    // 3. 检查当前失败节点是否与请求的节点一致
+    if (!nodeCode.equals(instance.getCurrentNodeCode())) {
+      log.warn("请求重试的节点与当前失败节点不一致: 请求={}, 当前={}", nodeCode, instance.getCurrentNodeCode());
+      return false;
+    }
+
+    // 4. 解析节点定义
+    List<NodeDefinition> nodes = JSON.parseArray(instance.getNodeJson(), NodeDefinition.class);
+    Map<String, Object> inputParams = JSON.parseObject(instance.getRuntimeParams(), Map.class);
+
+    // 5. 异步执行重试（通过Quartz Job）
+    try {
+      triggerRetryJob(instanceId, nodes, nodeCode, inputParams);
+      log.info("节点重试Job触发成功，实例ID: {}, 节点: {}", instanceId, nodeCode);
+      return true;
+    } catch (SchedulerException e) {
+      log.error("触发重试Job失败，实例ID: {}", instanceId, e);
+      throw new RuntimeException("触发节点重试失败", e);
+    }
+  }
+
+  /**
+   * 触发重试Job执行
+   *
+   * @param instanceId  实例ID
+   * @param nodes       节点列表
+   * @param startNodeCode 起始节点编码
+   * @param inputParams 输入参数
+   * @throws SchedulerException 调度异常
+   */
+  private void triggerRetryJob(String instanceId, List<NodeDefinition> nodes, String startNodeCode,
+                               Map<String, Object> inputParams) throws SchedulerException {
+    // 生成唯一的Job名称和组名
+    String jobName = "PIPELINE_RETRY_JOB_" + instanceId + "_" + System.currentTimeMillis();
+    String jobGroup = "PIPELINE_GROUP";
+    String triggerName = "PIPELINE_RETRY_TRIGGER_" + instanceId + "_" + System.currentTimeMillis();
+
+    // 构建JobDetail
+    JobDetail jobDetail = JobBuilder.newJob(PipelineExecutionJob.class)
+        .withIdentity(jobName, jobGroup)
+        .withDescription("流水线重试Job: " + instanceId)
+        .build();
+
+    // 设置Job数据 - 使用特殊的key标识这是重试任务
+    jobDetail.getJobDataMap().put(PipelineExecutionJob.JOB_KEY_INSTANCE_ID, instanceId);
+    jobDetail.getJobDataMap().put(PipelineExecutionJob.JOB_KEY_NODES, JSON.toJSONString(nodes));
+    jobDetail.getJobDataMap().put(PipelineExecutionJob.JOB_KEY_PARAMS, inputParams != null ? JSON.toJSONString(inputParams) : "");
+    jobDetail.getJobDataMap().put("RETRY_NODE_CODE", startNodeCode); // 重试节点编码
+
+    // 构建立即执行的Trigger
+    Trigger trigger = TriggerBuilder.newTrigger()
+        .withIdentity(triggerName, jobGroup)
+        .withDescription("流水线重试触发器: " + instanceId)
+        .startNow() // 立即执行
+        .build();
+
+    // 调度Job
+    scheduler.scheduleJob(jobDetail, trigger);
+    log.info("重试Job已加入调度队列，实例ID: {}, 起始节点: {}", instanceId, startNodeCode);
   }
 }

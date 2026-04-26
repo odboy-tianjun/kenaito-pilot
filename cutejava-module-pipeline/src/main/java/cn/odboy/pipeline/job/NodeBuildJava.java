@@ -1,13 +1,13 @@
 package cn.odboy.pipeline.job;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.odboy.framework.server.core.ConfigurerAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.InterruptableJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.UnableToInterruptJobException;
 import org.springframework.stereotype.Service;
-
 import java.util.Map;
 
 /**
@@ -22,6 +22,9 @@ public class NodeBuildJava implements InterruptableJob {
 
   private volatile boolean interrupted = false;
 
+  public NodeBuildJava(ConfigurerAdapter configurerAdapter) {
+  }
+
   /**
    * 中断任务执行
    */
@@ -34,14 +37,14 @@ public class NodeBuildJava implements InterruptableJob {
   /**
    * 执行节点逻辑（Quartz Job方式）
    *
-   * @param ctx Job执行上下文
+   * @param context Job执行上下文
    * @throws JobExecutionException 执行异常
    */
   @Override
-  public void execute(JobExecutionContext ctx) throws JobExecutionException {
-    String tags = ctx.getMergedJobDataMap().getString("tags");
-    String job = ctx.getMergedJobDataMap().getString("job");
-    String version = ctx.getMergedJobDataMap().getString("version");
+  public void execute(JobExecutionContext context) throws JobExecutionException {
+    String tags = context.getMergedJobDataMap().getString("tags");
+    String job = context.getMergedJobDataMap().getString("job");
+    String version = context.getMergedJobDataMap().getString("version");
 
     log.info("开始构建Java项目，tags: {}, job: {}, version: {}", tags, job, version);
 
@@ -54,7 +57,7 @@ public class NodeBuildJava implements InterruptableJob {
         return;
       }
 
-      log.info("Java项目构建成功");
+      execute(context.getMergedJobDataMap());
 
     } catch (Exception e) {
       log.error("Java项目构建失败", e);

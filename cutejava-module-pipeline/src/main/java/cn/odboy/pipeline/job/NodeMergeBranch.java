@@ -46,7 +46,7 @@ public class NodeMergeBranch implements InterruptableJob {
         return;
       }
 
-      log.info("代码合并成功");
+      execute(context.getMergedJobDataMap());
 
     } catch (Exception e) {
       log.error("代码合并失败", e);
@@ -66,7 +66,9 @@ public class NodeMergeBranch implements InterruptableJob {
       // 模拟合并逻辑
       ThreadUtil.sleep(2000);
 
-      log.info("代码合并成功");
+      throw new RuntimeException("测试节点异常");
+
+      //      log.info("代码合并成功");
 
     } catch (Exception e) {
       log.error("代码合并失败", e);

@@ -26,7 +26,7 @@ public class PipelineExecutionJob implements Job {
 
   @Autowired
   private PipelineExecutor pipelineExecutor;
-
+  
   /**
    * 执行Job
    *
@@ -36,29 +36,38 @@ public class PipelineExecutionJob implements Job {
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
     JobDataMap dataMap = context.getMergedJobDataMap();
-
-    // 从JobDataMap中获取流水线信息
+  
+    // 从 JobDataMap中获取流水线信息
     String instanceId = dataMap.getString(JOB_KEY_INSTANCE_ID);
     String nodesJson = dataMap.getString(JOB_KEY_NODES);
     String paramsJson = dataMap.getString(JOB_KEY_PARAMS);
-
-    log.info("开始执行Pipeline Job，实例ID: {}", instanceId);
-
+    String retryNodeCode = dataMap.getString("RETRY_NODE_CODE"); // 重试节点编码（可选）
+  
+    log.info("开始执行Pipeline Job，实例ID: {}, 重试节点: {}", instanceId, retryNodeCode);
+  
     try {
       // 反序列化节点定义
       List<NodeDefinition> nodes = JSON.parseArray(nodesJson, NodeDefinition.class);
-
+  
       // 反序列化参数
       Map<String, Object> params = null;
       if (paramsJson != null && !paramsJson.isEmpty()) {
         params = JSON.parseObject(paramsJson, Map.class);
       }
-
-      // 执行流水线
-      pipelineExecutor.execute(instanceId, nodes, params);
-
+  
+      // 判断是正常执行还是重试
+      if (retryNodeCode != null && !retryNodeCode.isEmpty()) {
+        // 重试模式：从指定节点开始执行
+        log.info("执行重试模式，从节点 {} 开始", retryNodeCode);
+        pipelineExecutor.retryFromNode(instanceId, nodes, retryNodeCode, params);
+      } else {
+        // 正常模式：从头开始执行
+        log.info("执行正常模式");
+        pipelineExecutor.execute(instanceId, nodes, params);
+      }
+  
       log.info("Pipeline Job执行完成，实例ID: {}", instanceId);
-
+  
     } catch (Exception e) {
       log.error("Pipeline Job执行失败，实例ID: {}", instanceId, e);
       // 抛出异常，让Quartz知道执行失败

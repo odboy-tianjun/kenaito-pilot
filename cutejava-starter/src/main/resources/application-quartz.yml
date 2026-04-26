@@ -1,53 +1,52 @@
-# 分布式定时任务配置
 spring:
-  # 数据库一定不能区分大小写
+  # Quartz 分布式定时任务核心配置
   quartz:
-    # 必需，指定使用 JDBC 存储
+    # 存储类型：jdbc（分布式必选）/memory（单机内存）
     job-store-type: jdbc
+    # 关闭自动初始化表（推荐手动执行Quartz官方SQL脚本，避免版本兼容问题）
     jdbc:
-      # 必需，手动初始化Quartz表
       initialize-schema: never
+    # 是否等待任务执行完成后再关闭上下文（优雅停机）
+    wait-for-jobs-to-complete-on-shutdown: true
+    # 是否覆盖已存在的任务（开发环境可设为true，生产建议false）
+    overwrite-existing-jobs: false
+    # Quartz原生属性（对应quartz.properties）
     properties:
       org:
         quartz:
+          # 调度器核心配置
           scheduler:
-            # 必需，指定调度器实例的名称
-            instanceName: KenaitoPilotScheduler
-            # 必需，指定调度器实例的 ID
-            instanceId: AUTO
+            instanceName: KenaitoPilotScheduler  # 集群实例名称（统一）
+            instanceId: AUTO  # 集群实例ID自动生成（必选，避免冲突）
+            skipUpdateCheck: true  # 跳过Quartz版本更新检查（提升启动速度）
+          # 线程池配置
           threadPool:
-            # Scheduler使用的线程池名称，实现了ThreadPool接口，参考org.quartz.simpl.SimpleThreadPool
-            class: org.quartz.simpl.SimpleThreadPool
-            # 可选，并发个数（1～100）
-            threadCount: 10
-            # 可选，线程的优先级（1～10）
-            threadPriority: 5
-            # 可选，指定在线程池里面创建的线程是否是守护线程
-            makeThreadsDaemons: false
-            # 可选，线程上下文类加载器是否继承自初始线程的加载器
-            threadsInheritContextClassLoaderOfInitializingThread: true
+            class: org.quartz.simpl.SimpleThreadPool  # 默认线程池实现
+            threadCount: 10  # 并发线程数（根据业务调整，建议5-20）
+            threadPriority: 5  # 线程优先级（默认5，1最低/10最高）
+            makeThreadsDaemons: false  # 非守护线程（保证任务执行完成）
+            threadsInheritContextClassLoaderOfInitializingThread: true  # 继承上下文类加载器
+          # 数据源配置（对接Spring数据源/自定义数据源）
           dataSource:
             jobStoreDataSource:
-              provider: hikaricp
+              provider: hikaricp  # 连接池类型（Spring Boot默认HikariCP）
               driver: com.mysql.cj.jdbc.Driver
               URL: jdbc:mysql://192.168.235.128:3306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
               user: root
               password: kd123456789
-              maxConnections: 10
-              validationQuery: select 1
+              maxConnections: 10  # 数据源最大连接数
+              validationQuery: select 1  # 连接有效性校验
+          # 任务存储配置（分布式核心）
           jobStore:
-            # 可选，如果你不需要集群，可以去掉
-            isClustered: true
-            # 可选，集群检查间隔时间，可以根据需要调整
-            clusterCheckinInterval: 10000
-            # 可选，分布式事务类
-            class: org.quartz.impl.jdbcjobstore.JobStoreTX
-            # 必需，指定 JDBC 驱动代理类
-            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-            # 可选，是否使用属性存储，可以根据需要调整
-            useProperties: false
-            # 必需，指定表的前缀
-            tablePrefix: qrtz_
-            # 可选，指定误触发阈值，可以根据需要调整
-            misfireThreshold: 60000
-            dataSource: jobStoreDataSource
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX  # 事务型存储（非JTA场景首选）
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate  # MySQL适配的代理类
+            tablePrefix: qrtz_  # Quartz表前缀（需与手动创建的表一致）
+            isClustered: true  # 开启集群（分布式必选）
+            clusterCheckinInterval: 10000  # 集群节点心跳间隔（10秒）
+            misfireThreshold: 60000  # 任务误触发阈值（60秒，超时重新触发）
+            useProperties: false  # 序列化JobDataMap为BLOB（true则存储为字符串，需注意数据类型）
+            dataSource: jobStoreDataSource  # 关联上面的数据源配置
+            # 优化配置：减少锁竞争（集群场景）
+            acquireTriggersWithinLock: true
+            maxMisfiresToHandleAtATime: 10
+            txIsolationLevelSerializable: true

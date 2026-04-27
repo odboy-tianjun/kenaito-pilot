@@ -3,10 +3,11 @@ package cn.odboy.pipeline.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.odboy.annotation.AnonymousPostMapping;
-import cn.odboy.framework.context.KitSpringBeanHolder;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.core.TaskBuilder;
-import cn.odboy.pipeline.core.TaskOperation;
+import cn.odboy.pipeline.core.TaskEngine;
+import cn.odboy.pipeline.core.TaskResult;
+import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
 import cn.odboy.pipeline.dal.dataobject.PipelineTemplateContextTb;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineTemplateContextService;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,10 +31,12 @@ public class PipelineV2Controller {
 
   @Autowired
   private PipelineTemplateContextService pipelineTemplateContextService;
+  @Autowired
+  private TaskEngine taskEngine;
 
-  @ApiOperation("测试")
-  @AnonymousPostMapping(value = "/test")
-  public ResponseEntity<?> doTest() {
+  @ApiOperation("启动流水线（测试）")
+  @AnonymousPostMapping(value = "/testStart")
+  public ResponseEntity<?> testStart() {
     String clusterType = "k8s";
     String clusterCode = "local_k8s_28";
     String contextType = "deploy_app";
@@ -75,5 +79,13 @@ public class PipelineV2Controller {
     // 设置节点
     taskBuilder = taskBuilder.nodes(nodeDefinitions);
     return ResponseEntity.ok(taskBuilder.execute());
+  }
+
+
+  @ApiOperation("流水线节点重试")
+  @AnonymousPostMapping(value = "/testRetry")
+  public ResponseEntity<?> testRetry(@RequestBody PipelineInstanceTb args) {
+    TaskResult result = taskEngine.retry(args.getId(), args.getCurrentNodeCode());
+    return ResponseEntity.ok(result);
   }
 }

@@ -1,5 +1,6 @@
 package cn.odboy.pipeline.core;
 
+import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.context.KitSpringBeanHolder;
 import cn.odboy.pipeline.constant.PipelineStatusEnum;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
@@ -46,10 +47,38 @@ public class TaskJob implements InterruptableJob {
       operations.add(operation);
     }
 
-    // 初始化实例和节点
-    pipelineInstanceService.instanceInitWithNodeList(nodes, operations, context);
+    // 是否重试模式
+    String retryBizCode = context.getRetryBizCode();
+    if (StrUtil.isBlank(retryBizCode)) {
+      // 初始化实例和节点
+      pipelineInstanceService.instanceInitWithNodeList(nodes, operations, context);
+    }
 
-    for (TaskOperation operation : operations) {
+    List<TaskOperation> operationsToExecute = operations;
+
+    if (StrUtil.isNotBlank(context.getRetryBizCode())) {
+      log.info("检测到重试标识，从节点 {} 开始执行", context.getRetryBizCode());
+
+      int startIndex = -1;
+      for (int i = 0; i < nodes.size(); i++) {
+        if (nodes.get(i).getCode().equals(context.getRetryBizCode())) {
+          startIndex = i;
+          break;
+        }
+      }
+
+      if (startIndex == -1) {
+        log.error("未找到重试节点: {}", context.getRetryBizCode());
+        pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
+        throw new JobExecutionException("未找到重试节点: " + context.getRetryBizCode());
+      }
+
+      operationsToExecute = operations.subList(startIndex, operations.size());
+      log.info("将执行 {} 个节点，从索引 {} 开始", operationsToExecute.size(), startIndex);
+      context.setRetryBizCode(null);
+    }
+
+    for (TaskOperation operation : operationsToExecute) {
       if (interrupted.get()) {
         log.warn("Job被中断，停止执行，taskId: {}", context.getTaskId());
         pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);

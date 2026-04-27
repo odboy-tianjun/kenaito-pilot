@@ -35,6 +35,10 @@ public class TaskContext extends KitObject {
    */
   private String contextName;
   /**
+   * 重试节点的编码
+   */
+  private String retryBizCode;
+  /**
    * 上下文数据存储
    */
   private Map<String, Object> data = new HashMap<>();

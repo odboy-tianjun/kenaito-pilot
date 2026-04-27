@@ -1,9 +1,13 @@
 package cn.odboy.pipeline.core;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.odboy.framework.exception.BadRequestException;
+import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineInstanceService;
 import cn.odboy.pipeline.util.PipelineNameUtil;
+import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;
@@ -61,6 +65,31 @@ public class TaskEngine {
     }
   }
 
+  public TaskResult retry(String instanceId, String retryBizCode) {
+    PipelineInstanceTb pipelineInstance = pipelineInstanceService.getOne(new LambdaQueryWrapper<PipelineInstanceTb>()
+        .eq(PipelineInstanceTb::getId, instanceId)
+        .orderByDesc(PipelineInstanceTb::getUpdateTime)
+        .last("LIMIT 1")
+    );
+    if (pipelineInstance == null) {
+      throw new BadRequestException("流水线实例不存在");
+    }
+
+    List<NodeDefinition> nodes = JSON.parseArray(pipelineInstance.getNodeJson(), NodeDefinition.class);
+    TaskContext context = JSON.parseObject(pipelineInstance.getContextJson(), TaskContext.class);
+
+    // 任务调度
+    try {
+      retryJob(nodes, context, retryBizCode);
+      log.info("流水线Job重试成功，实例ID: {}", context.getTaskId());
+      return TaskResult.success("流水线节点 " + retryBizCode + " 重试成功");
+    } catch (SchedulerException e) {
+      log.error("重试流水线Job失败，实例ID: {}, retryBizCode: {}", context.getTaskId(), retryBizCode, e);
+      throw new RuntimeException("流水线节点 " + retryBizCode + " 重试失败", e);
+    }
+  }
+
+
   /**
    * 触发Job执行
    *
@@ -92,6 +121,19 @@ public class TaskEngine {
     // 调度Job
     scheduler.scheduleJob(jobDetail, trigger);
     log.info("流水线Job已加入调度队列，实例ID: {}", context.getTaskId());
+  }
+
+  /**
+   * Job节点重试
+   *
+   * @param nodes        节点定义
+   * @param context      任务上下文
+   * @param retryBizCode 重试节点编码
+   */
+  private void retryJob(List<NodeDefinition> nodes, TaskContext context, String retryBizCode) throws SchedulerException {
+    stopJob(context);
+    context.setRetryBizCode(retryBizCode);
+    triggerJob(nodes, context);
   }
 
   /**

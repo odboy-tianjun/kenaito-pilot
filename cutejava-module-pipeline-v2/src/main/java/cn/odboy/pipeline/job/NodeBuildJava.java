@@ -1,5 +1,6 @@
 package cn.odboy.pipeline.job;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.odboy.pipeline.constant.PipelineStatusEnum;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
@@ -17,9 +18,14 @@ import org.springframework.stereotype.Service;
 @Service("node_build_java")
 public class NodeBuildJava implements TaskOperation {
 
+//  @Autowired
+//  private TaskEngine taskEngine;
+
   @Override
   public String execute(TaskContext context) {
     log.info("执行参数：{}", JSON.toJSONString(context));
+//    taskEngine.stopJob(context);
+//    log.info("任务停止测试，当前上下文: {}", JSON.toJSONString(context));
     return PipelineStatusEnum.RUNNING.getCode();
   }
 
@@ -43,6 +49,7 @@ public class NodeBuildJava implements TaskOperation {
   }
 
   private boolean checkServiceStatus(TaskContext context) {
+    ThreadUtil.sleep(3000);
     return true;
   }
 }

@@ -3,14 +3,17 @@ package cn.odboy.pipeline.core;
 import cn.hutool.core.collection.CollUtil;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineInstanceService;
+import cn.odboy.pipeline.util.PipelineNameUtil;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.UnableToInterruptJobException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +27,7 @@ public class TaskEngine {
   @Autowired
   private Scheduler scheduler;
   @Autowired
-  PipelineInstanceService pipelineInstanceService;
+  private PipelineInstanceService pipelineInstanceService;
 
   /**
    * 执行任务操作列表 按顺序执行所有操作，如果某个操作失败则立即终止
@@ -49,7 +52,7 @@ public class TaskEngine {
 
     // 任务调度
     try {
-      triggerPipelineJob(nodes, context);
+      triggerJob(nodes, context);
       log.info("流水线Job触发成功，实例ID: {}", context.getTaskId());
       return TaskResult.success("任务执行成功");
     } catch (SchedulerException e) {
@@ -59,15 +62,15 @@ public class TaskEngine {
   }
 
   /**
-   * 触发流水线Job执行
+   * 触发Job执行
    *
-   * @param nodes      节点定义
-   * @param context    任务上下文
+   * @param nodes   节点定义
+   * @param context 任务上下文
    */
-  private void triggerPipelineJob(List<NodeDefinition> nodes, TaskContext context) throws SchedulerException {
+  private void triggerJob(List<NodeDefinition> nodes, TaskContext context) throws SchedulerException {
     // 生成唯一的Job名称和组名
-    String jobGroup = "PIPELINE_GROUP";
-    String jobName = "PIPELINE_JOB_" + context.getTaskId();
+    String jobGroup = PipelineNameUtil.getJobGroup();
+    String jobName = PipelineNameUtil.getJobName(context);
 
     // 构建JobDetail
     JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
@@ -89,5 +92,41 @@ public class TaskEngine {
     // 调度Job
     scheduler.scheduleJob(jobDetail, trigger);
     log.info("流水线Job已加入调度队列，实例ID: {}", context.getTaskId());
+  }
+
+  /**
+   * 停止Job
+   *
+   * @param context 任务上下文
+   */
+  public void stopJob(TaskContext context) {
+    try {
+      String jobGroup = PipelineNameUtil.getJobGroup();
+      String jobName = PipelineNameUtil.getJobName(context);
+
+      JobKey jobKey = new JobKey(jobName, jobGroup);
+
+      boolean interrupted = scheduler.interrupt(jobKey);
+
+      if (interrupted) {
+        log.info("成功发送中断信号给Job，taskId: {}", context.getTaskId());
+      } else {
+        log.warn("Job不支持中断或不存在，尝试删除Job，taskId: {}", context.getTaskId());
+      }
+
+      boolean deleted = scheduler.deleteJob(jobKey);
+
+      if (deleted) {
+        log.info("成功停止Job，taskId: {}", context.getTaskId());
+      } else {
+        log.warn("Job不存在或已执行完成，taskId: {}", context.getTaskId());
+      }
+    } catch (UnableToInterruptJobException e) {
+      log.error("中断Job失败，taskId: {}", context.getTaskId(), e);
+      throw new RuntimeException("中断任务失败", e);
+    } catch (SchedulerException e) {
+      log.error("停止Job失败，taskId: {}", context.getTaskId(), e);
+      throw new RuntimeException("停止任务失败", e);
+    }
   }
 }

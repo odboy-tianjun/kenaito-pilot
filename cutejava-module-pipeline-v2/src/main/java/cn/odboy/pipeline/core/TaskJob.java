@@ -4,25 +4,32 @@ import cn.odboy.framework.context.KitSpringBeanHolder;
 import cn.odboy.pipeline.constant.PipelineStatusEnum;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineInstanceService;
+import com.alibaba.fastjson2.JSON;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.UnableToInterruptJobException;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class TaskJob implements InterruptableJob {
 
-  @Autowired
-  private PipelineInstanceService pipelineInstanceService;
+  private final PipelineInstanceService pipelineInstanceService;
+
+  private final AtomicBoolean interrupted = new AtomicBoolean(false);
+
+  public TaskJob() {
+    pipelineInstanceService = KitSpringBeanHolder.getBean(PipelineInstanceService.class);
+  }
 
   @Override
   public void interrupt() throws UnableToInterruptJobException {
-
+    log.info("收到中断信号");
+    interrupted.set(true);
   }
 
   @Override
@@ -30,6 +37,7 @@ public class TaskJob implements InterruptableJob {
     JobDataMap mergedJobDataMap = jobExecutionContext.getMergedJobDataMap();
     List<NodeDefinition> nodes = getMapValue(mergedJobDataMap, "nodes");
     TaskContext context = getMapValue(mergedJobDataMap, "context");
+    log.info("开始执行操作前。nodes: {}, context: {}", JSON.toJSONString(nodes), JSON.toJSONString(context));
 
     // 设置操作
     List<TaskOperation> operations = new ArrayList<>();
@@ -41,8 +49,13 @@ public class TaskJob implements InterruptableJob {
     // 初始化实例和节点
     pipelineInstanceService.instanceInitWithNodeList(nodes, operations, context);
 
-    boolean isFailure = false;
     for (TaskOperation operation : operations) {
+      if (interrupted.get()) {
+        log.warn("Job被中断，停止执行，taskId: {}", context.getTaskId());
+        pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
+        return;
+      }
+
       log.info("开始执行操作: {}", operation.name());
       pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.RUNNING, context);
 
@@ -51,14 +64,11 @@ public class TaskJob implements InterruptableJob {
       if (TaskStatusEnum.FAILURE.getCode().equals(status)) {
         log.error("操作执行失败: {}", operation.name());
         pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
-        isFailure = true;
-        break;
+        return;
       }
     }
 
-    if (!isFailure) {
-      pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.SUCCESS, context);
-    }
+    pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.SUCCESS, context);
     log.info("所有操作执行完成");
   }
 
@@ -74,6 +84,11 @@ public class TaskJob implements InterruptableJob {
     int maxRetries = operation.retryTimes();
 
     for (int i = 0; i < maxRetries; i++) {
+      if (interrupted.get()) {
+        log.warn("操作执行被中断: {}", operation.name());
+        return TaskStatusEnum.FAILURE.getCode();
+      }
+
       try {
         pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.RUNNING, operation, context, PipelineStatusEnum.RUNNING.getDesc());
         String status = operation.execute(context);
@@ -116,6 +131,11 @@ public class TaskJob implements InterruptableJob {
    */
   private String waitForCompletion(TaskOperation operation, TaskContext context) {
     while (true) {
+      if (interrupted.get()) {
+        log.warn("等待异步操作被中断: {}", operation.name());
+        return TaskStatusEnum.FAILURE.getCode();
+      }
+
       try {
         String status = operation.describe(context);
 

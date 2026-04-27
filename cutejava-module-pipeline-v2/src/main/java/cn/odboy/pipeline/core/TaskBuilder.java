@@ -3,18 +3,18 @@ package cn.odboy.pipeline.core;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.odboy.framework.context.KitSpringBeanHolder;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.dal.model.NodeDefinition;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 任务构建器 用于链式构建和执行任务 注意：本类不是线程安全的，不要在多线程间复用
+ * 任务构建器 用于链式构建和执行任务(注意：本类不是线程安全的，不要在多线程间复用)
  */
 public class TaskBuilder {
 
   private final List<NodeDefinition> nodes = new ArrayList<>();
-  private final List<TaskOperation> operations = new ArrayList<>();
   private final TaskContext context = new TaskContext();
 
   /**
@@ -28,20 +28,6 @@ public class TaskBuilder {
       throw new BadRequestException("参数 节点定义(nodeDefinitions) 必填");
     }
     nodes.addAll(nodeDefinitions);
-    return this;
-  }
-
-  /**
-   * 添加任务操作
-   *
-   * @param operation 任务操作
-   * @return 当前构建器实例
-   */
-  public TaskBuilder addOperation(TaskOperation operation) {
-    if (operation == null) {
-      throw new BadRequestException("参数 任务操作 (operation) 不能为 null");
-    }
-    operations.add(operation);
     return this;
   }
 
@@ -67,8 +53,8 @@ public class TaskBuilder {
       // 自动配置任务 id
       context.setTaskId(IdUtil.fastSimpleUUID());
     }
-    TaskEngine engine = new TaskEngine();
-    return engine.execute(nodes, operations, context);
+    TaskEngine engine = KitSpringBeanHolder.getBean(TaskEngine.class);
+    return engine.execute(nodes, context);
   }
 
   /**

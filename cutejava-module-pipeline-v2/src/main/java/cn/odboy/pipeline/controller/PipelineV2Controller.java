@@ -74,12 +74,6 @@ public class PipelineV2Controller {
 
     // 设置节点
     taskBuilder = taskBuilder.nodes(nodeDefinitions);
-
-    // 设置操作
-    for (NodeDefinition nodeDefinition : nodeDefinitions) {
-      TaskOperation operation = KitSpringBeanHolder.getBean(nodeDefinition.getCode());
-      taskBuilder = taskBuilder.addOperation(operation);
-    }
     return ResponseEntity.ok(taskBuilder.execute());
   }
 }

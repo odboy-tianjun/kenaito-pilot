@@ -1,12 +1,10 @@
 package cn.odboy.pipeline.job;
 
-import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.constant.PipelineStatusEnum;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import com.alibaba.fastjson2.JSON;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,8 +20,7 @@ public class NodeBuildJava implements TaskOperation {
   @Override
   public String execute(TaskContext context) {
     log.info("执行参数：{}", JSON.toJSONString(context));
-    throw new BadRequestException("调用Gitlab异常");
-//    return PipelineStatusEnum.RUNNING.getCode();
+    return PipelineStatusEnum.RUNNING.getCode();
   }
 
   @Override

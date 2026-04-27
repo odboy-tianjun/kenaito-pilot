@@ -1,15 +1,18 @@
 package cn.odboy.pipeline.core;
 
+import cn.odboy.base.KitObject;
 import cn.odboy.framework.exception.BadRequestException;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 任务上下文 用于在任务操作之间传递数据和共享状态
  */
-@Data
-public class TaskContext {
+@Getter
+@Setter
+public class TaskContext extends KitObject {
 
   /**
    * 任务唯一标识

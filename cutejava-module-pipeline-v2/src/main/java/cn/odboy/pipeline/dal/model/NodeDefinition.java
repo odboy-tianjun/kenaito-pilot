@@ -1,13 +1,16 @@
 package cn.odboy.pipeline.dal.model;
 
-import lombok.Data;
+import cn.odboy.base.KitObject;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 节点定义模型
  */
-@Data
-public class NodeDefinition {
+@Getter
+@Setter
+public class NodeDefinition extends KitObject {
 
   /**
    * 业务编码

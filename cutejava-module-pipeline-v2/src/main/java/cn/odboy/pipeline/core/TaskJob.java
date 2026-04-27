@@ -1,0 +1,152 @@
+package cn.odboy.pipeline.core;
+
+import cn.odboy.framework.context.KitSpringBeanHolder;
+import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.dal.model.NodeDefinition;
+import cn.odboy.pipeline.service.PipelineInstanceService;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.InterruptableJob;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.UnableToInterruptJobException;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Slf4j
+public class TaskJob implements InterruptableJob {
+
+  @Autowired
+  private PipelineInstanceService pipelineInstanceService;
+
+  @Override
+  public void interrupt() throws UnableToInterruptJobException {
+
+  }
+
+  @Override
+  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+    JobDataMap mergedJobDataMap = jobExecutionContext.getMergedJobDataMap();
+    List<NodeDefinition> nodes = getMapValue(mergedJobDataMap, "nodes");
+    TaskContext context = getMapValue(mergedJobDataMap, "context");
+
+    // 设置操作
+    List<TaskOperation> operations = new ArrayList<>();
+    for (NodeDefinition nodeDefinition : nodes) {
+      TaskOperation operation = KitSpringBeanHolder.getBean(nodeDefinition.getCode());
+      operations.add(operation);
+    }
+
+    // 初始化实例和节点
+    pipelineInstanceService.instanceInitWithNodeList(nodes, operations, context);
+
+    boolean isFailure = false;
+    for (TaskOperation operation : operations) {
+      log.info("开始执行操作: {}", operation.name());
+      pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.RUNNING, context);
+
+      String status = executeWithRetry(operation, context);
+
+      if (TaskStatusEnum.FAILURE.getCode().equals(status)) {
+        log.error("操作执行失败: {}", operation.name());
+        pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
+        isFailure = true;
+        break;
+      }
+    }
+
+    if (!isFailure) {
+      pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.SUCCESS, context);
+    }
+    log.info("所有操作执行完成");
+  }
+
+
+  /**
+   * 带重试机制的执行操作 在指定重试次数内尝试执行操作，直到成功或达到最大重试次数
+   *
+   * @param operation 任务操作
+   * @param context   任务上下文
+   * @return 执行状态
+   */
+  private String executeWithRetry(TaskOperation operation, TaskContext context) {
+    int maxRetries = operation.retryTimes();
+
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.RUNNING, operation, context, PipelineStatusEnum.RUNNING.getDesc());
+        String status = operation.execute(context);
+
+        if (TaskStatusEnum.SUCCESS.getCode().equals(status)) {
+          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.SUCCESS, operation, context, PipelineStatusEnum.SUCCESS.getDesc());
+          return TaskStatusEnum.SUCCESS.getCode();
+        }
+
+        if (TaskStatusEnum.RUNNING.getCode().equals(status)) {
+          return waitForCompletion(operation, context);
+        }
+
+        // 记录失败状态的日志
+        log.warn("操作执行返回失败状态，操作名称：{}, 重试次数：{}/{}", operation.name(), i + 1, maxRetries);
+        if (i == maxRetries - 1) {
+          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+          return TaskStatusEnum.FAILURE.getCode();
+        }
+
+      } catch (Exception e) {
+        log.warn("操作执行异常，操作名称：{}, 重试次数：{}/{}", operation.name(), i + 1, maxRetries, e);
+        if (i == maxRetries - 1) {
+          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, e.getMessage());
+          return TaskStatusEnum.FAILURE.getCode();
+        }
+      }
+    }
+
+    pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+    return TaskStatusEnum.FAILURE.getCode();
+  }
+
+  /**
+   * 等待异步操作完成 通过轮询方式持续检查操作状态，直到成功、失败或被中断
+   *
+   * @param operation 任务操作
+   * @param context   任务上下文
+   * @return 最终执行状态
+   */
+  private String waitForCompletion(TaskOperation operation, TaskContext context) {
+    while (true) {
+      try {
+        String status = operation.describe(context);
+
+        if (TaskStatusEnum.SUCCESS.getCode().equals(status)) {
+          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.SUCCESS, operation, context, PipelineStatusEnum.SUCCESS.getDesc());
+          return TaskStatusEnum.SUCCESS.getCode();
+        }
+
+        if (TaskStatusEnum.FAILURE.getCode().equals(status)) {
+          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+          return TaskStatusEnum.FAILURE.getCode();
+        }
+
+        Thread.sleep(operation.pollInterval());
+
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("等待异步操作被中断，操作名称：{}", operation.name());
+        pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+        return TaskStatusEnum.FAILURE.getCode();
+      } catch (Exception e) {
+        log.warn("查询状态异常，操作名称：{}", operation.name(), e);
+        pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+        return TaskStatusEnum.FAILURE.getCode();
+      }
+    }
+  }
+
+  @SuppressWarnings("all")
+  public <T> T getMapValue(JobDataMap mergedJobDataMap, String key) {
+    Object o = mergedJobDataMap.get(key);
+    return (T) o;
+  }
+}

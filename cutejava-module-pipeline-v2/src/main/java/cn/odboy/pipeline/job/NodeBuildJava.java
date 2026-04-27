@@ -1,0 +1,51 @@
+package cn.odboy.pipeline.job;
+
+import cn.odboy.framework.exception.BadRequestException;
+import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.core.TaskContext;
+import cn.odboy.pipeline.core.TaskOperation;
+import com.alibaba.fastjson2.JSON;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
+/**
+ * 构建Java节点
+ *
+ * @author odboy
+ * @date 2026-04-26
+ */
+@Slf4j
+@Service("node_build_java")
+public class NodeBuildJava implements TaskOperation {
+
+  @Override
+  public String execute(TaskContext context) {
+    log.info("执行参数：{}", JSON.toJSONString(context));
+    throw new BadRequestException("调用Gitlab异常");
+//    return PipelineStatusEnum.RUNNING.getCode();
+  }
+
+  @Override
+  public String describe(TaskContext context) {
+    boolean isReady = checkServiceStatus(context);
+    if (isReady) {
+      return PipelineStatusEnum.SUCCESS.getCode();
+    }
+    return PipelineStatusEnum.RUNNING.getCode();
+  }
+
+  @Override
+  public String name() {
+    return "构建";
+  }
+
+  @Override
+  public long pollInterval() {
+    return 2000;
+  }
+
+  private boolean checkServiceStatus(TaskContext context) {
+    return true;
+  }
+}

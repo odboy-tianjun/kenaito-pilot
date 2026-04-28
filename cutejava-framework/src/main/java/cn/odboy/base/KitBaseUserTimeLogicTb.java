@@ -52,6 +52,5 @@ public class KitBaseUserTimeLogicTb extends KitObject {
   @ApiModelProperty(value = "数据有效性", hidden = true)
   @TableLogic
   @TableField("available")
-  private Integer
-      available;
+  private Integer available;
 }

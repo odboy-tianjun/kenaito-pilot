@@ -42,12 +42,12 @@ public class TaskEngine {
   public TaskResult execute(List<NodeDefinition> nodes, TaskContext context) {
     if (CollUtil.isEmpty(nodes)) {
       log.error("任务操作列表为空");
-      return TaskResult.fail("TaskEngine", "任务操作列表不能为空");
+      throw new BadRequestException("任务操作列表不能为空");
     }
 
     if (context == null) {
       log.error("任务上下文为空");
-      return TaskResult.fail("TaskEngine", "任务上下文不能为空");
+      throw new BadRequestException("任务上下文不能为空");
     }
 
     // 检查是否有同类型且执行中的

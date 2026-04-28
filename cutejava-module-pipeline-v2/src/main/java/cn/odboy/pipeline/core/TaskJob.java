@@ -74,6 +74,8 @@ public class TaskJob implements InterruptableJob {
 
       operationsToExecute = operations.subList(startIndex, operations.size());
       log.info("将执行 {} 个节点，从索引 {} 开始", operationsToExecute.size(), startIndex);
+
+      // 重置重试标识
       context.setRetryBizCode(null);
     }
 

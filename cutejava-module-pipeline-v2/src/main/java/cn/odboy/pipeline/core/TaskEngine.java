@@ -3,7 +3,6 @@ package cn.odboy.pipeline.core;
 import cn.hutool.core.collection.CollUtil;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineInstanceService;
 import cn.odboy.pipeline.util.PipelineNameUtil;
 import com.alibaba.fastjson2.JSON;

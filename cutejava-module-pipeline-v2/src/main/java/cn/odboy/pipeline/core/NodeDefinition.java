@@ -1,4 +1,4 @@
-package cn.odboy.pipeline.dal.model;
+package cn.odboy.pipeline.core;
 
 import cn.odboy.base.KitObject;
 import java.util.Map;

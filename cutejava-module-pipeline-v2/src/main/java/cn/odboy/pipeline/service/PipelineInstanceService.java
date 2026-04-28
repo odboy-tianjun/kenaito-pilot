@@ -4,7 +4,7 @@ import cn.odboy.pipeline.constant.PipelineStatusEnum;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
+import cn.odboy.pipeline.core.NodeDefinition;
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 

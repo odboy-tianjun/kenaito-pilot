@@ -6,7 +6,7 @@ import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceNodeTb;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
+import cn.odboy.pipeline.core.NodeDefinition;
 import cn.odboy.pipeline.dal.mysql.PipelineInstanceMapper;
 import cn.odboy.pipeline.service.PipelineInstanceNodeService;
 import cn.odboy.pipeline.service.PipelineInstanceService;

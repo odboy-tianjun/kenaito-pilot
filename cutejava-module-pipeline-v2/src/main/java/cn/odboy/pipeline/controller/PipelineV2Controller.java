@@ -9,7 +9,7 @@ import cn.odboy.pipeline.core.TaskEngine;
 import cn.odboy.pipeline.core.TaskResult;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
 import cn.odboy.pipeline.dal.dataobject.PipelineTemplateContextTb;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
+import cn.odboy.pipeline.core.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineTemplateContextService;
 import com.alibaba.fastjson2.JSON;
 import io.swagger.annotations.ApiOperation;

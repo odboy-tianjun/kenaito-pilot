@@ -5,7 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.context.KitSpringBeanHolder;
 import cn.odboy.framework.exception.BadRequestException;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
+
 import java.util.ArrayList;
 import java.util.List;
 

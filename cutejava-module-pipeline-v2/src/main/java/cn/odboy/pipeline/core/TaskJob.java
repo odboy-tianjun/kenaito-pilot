@@ -3,7 +3,6 @@ package cn.odboy.pipeline.core;
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.context.KitSpringBeanHolder;
 import cn.odboy.pipeline.constant.PipelineStatusEnum;
-import cn.odboy.pipeline.dal.model.NodeDefinition;
 import cn.odboy.pipeline.service.PipelineInstanceService;
 import com.alibaba.fastjson2.JSON;
 import java.util.ArrayList;

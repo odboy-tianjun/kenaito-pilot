@@ -2,12 +2,14 @@ package cn.odboy.pipeline.core;
 
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.context.KitSpringBeanHolder;
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
 import cn.odboy.pipeline.service.PipelineInstanceService;
 import com.alibaba.fastjson2.JSON;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDataMap;
@@ -68,7 +70,7 @@ public class TaskJob implements InterruptableJob {
 
       if (startIndex == -1) {
         log.error("未找到重试节点: {}", context.getRetryBizCode());
-        pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
+        pipelineInstanceService.updateInstanceStatus(TaskStatusEnum.FAILURE, context);
         throw new JobExecutionException("未找到重试节点: " + context.getRetryBizCode());
       }
 
@@ -82,32 +84,31 @@ public class TaskJob implements InterruptableJob {
     for (TaskOperation operation : operationsToExecute) {
       if (interrupted.get()) {
         log.warn("Job被中断，停止执行，taskId: {}", context.getTaskId());
-        pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
+        pipelineInstanceService.updateInstanceStatus(TaskStatusEnum.FAILURE, context);
         return;
       }
 
       log.info("开始执行操作: {}", operation.name());
-      pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.RUNNING, context);
+      pipelineInstanceService.updateInstanceStatus(TaskStatusEnum.RUNNING, context);
 
       String status = executeWithRetry(operation, context);
 
       if (TaskStatusEnum.FAILURE.getCode().equals(status)) {
         log.error("操作执行失败: {}", operation.name());
-        pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.FAILURE, context);
+        pipelineInstanceService.updateInstanceStatus(TaskStatusEnum.FAILURE, context);
         return;
       }
     }
 
-    pipelineInstanceService.updateInstanceStatus(PipelineStatusEnum.SUCCESS, context);
+    pipelineInstanceService.updateInstanceStatus(TaskStatusEnum.SUCCESS, context);
     log.info("所有操作执行完成");
   }
-
 
   /**
    * 带重试机制的执行操作 在指定重试次数内尝试执行操作，直到成功或达到最大重试次数
    *
-   * @param operation 任务操作
-   * @param context   任务上下文
+   * @param operation  任务操作
+   * @param context    任务上下文
    * @return 执行状态
    */
   private String executeWithRetry(TaskOperation operation, TaskContext context) {
@@ -120,11 +121,11 @@ public class TaskJob implements InterruptableJob {
       }
 
       try {
-        pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.RUNNING, operation, context, PipelineStatusEnum.RUNNING.getDesc());
+        pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.RUNNING, operation, context, TaskStatusEnum.RUNNING.getMessage());
         String status = operation.execute(context);
 
         if (TaskStatusEnum.SUCCESS.getCode().equals(status)) {
-          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.SUCCESS, operation, context, PipelineStatusEnum.SUCCESS.getDesc());
+          pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.SUCCESS, operation, context, TaskStatusEnum.SUCCESS.getMessage());
           return TaskStatusEnum.SUCCESS.getCode();
         }
 
@@ -135,20 +136,20 @@ public class TaskJob implements InterruptableJob {
         // 记录失败状态的日志
         log.warn("操作执行返回失败状态，操作名称：{}, 重试次数：{}/{}", operation.name(), i + 1, maxRetries);
         if (i == maxRetries - 1) {
-          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+          pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.FAILURE, operation, context, TaskStatusEnum.FAILURE.getMessage());
           return TaskStatusEnum.FAILURE.getCode();
         }
 
       } catch (Exception e) {
         log.warn("操作执行异常，操作名称：{}, 重试次数：{}/{}", operation.name(), i + 1, maxRetries, e);
         if (i == maxRetries - 1) {
-          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, e.getMessage());
+          pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.FAILURE, operation, context, e.getMessage());
           return TaskStatusEnum.FAILURE.getCode();
         }
       }
     }
 
-    pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+    pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.FAILURE, operation, context, TaskStatusEnum.FAILURE.getMessage());
     return TaskStatusEnum.FAILURE.getCode();
   }
 
@@ -170,12 +171,12 @@ public class TaskJob implements InterruptableJob {
         String status = operation.describe(context);
 
         if (TaskStatusEnum.SUCCESS.getCode().equals(status)) {
-          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.SUCCESS, operation, context, PipelineStatusEnum.SUCCESS.getDesc());
+          pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.SUCCESS, operation, context, TaskStatusEnum.SUCCESS.getMessage());
           return TaskStatusEnum.SUCCESS.getCode();
         }
 
         if (TaskStatusEnum.FAILURE.getCode().equals(status)) {
-          pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+          pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.FAILURE, operation, context, TaskStatusEnum.FAILURE.getMessage());
           return TaskStatusEnum.FAILURE.getCode();
         }
 
@@ -184,11 +185,11 @@ public class TaskJob implements InterruptableJob {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         log.warn("等待异步操作被中断，操作名称：{}", operation.name());
-        pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+        pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.FAILURE, operation, context, TaskStatusEnum.FAILURE.getMessage());
         return TaskStatusEnum.FAILURE.getCode();
       } catch (Exception e) {
         log.warn("查询状态异常，操作名称：{}", operation.name(), e);
-        pipelineInstanceService.updateInstanceNodeStatus(PipelineStatusEnum.FAILURE, operation, context, PipelineStatusEnum.FAILURE.getDesc());
+        pipelineInstanceService.updateInstanceNodeStatus(TaskStatusEnum.FAILURE, operation, context, TaskStatusEnum.FAILURE.getMessage());
         return TaskStatusEnum.FAILURE.getCode();
       }
     }

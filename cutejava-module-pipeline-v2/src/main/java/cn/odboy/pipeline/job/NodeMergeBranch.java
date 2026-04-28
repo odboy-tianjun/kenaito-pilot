@@ -1,6 +1,7 @@
 package cn.odboy.pipeline.job;
 
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
+import cn.odboy.pipeline.core.NodeDefinition;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import com.alibaba.fastjson2.JSON;
@@ -18,16 +19,16 @@ public class NodeMergeBranch implements TaskOperation {
   public String execute(TaskContext context) {
     log.info("执行参数：{}", JSON.toJSONString(context));
 //    throw new BadRequestException("调用Gitlab失败");
-    return PipelineStatusEnum.RUNNING.getCode();
+    return TaskStatusEnum.RUNNING.getCode();
   }
 
   @Override
   public String describe(TaskContext context) {
     boolean isReady = checkServiceStatus(context);
     if (isReady) {
-      return PipelineStatusEnum.SUCCESS.getCode();
+      return TaskStatusEnum.SUCCESS.getCode();
     }
-    return PipelineStatusEnum.RUNNING.getCode();
+    return TaskStatusEnum.RUNNING.getCode();
   }
 
   @Override

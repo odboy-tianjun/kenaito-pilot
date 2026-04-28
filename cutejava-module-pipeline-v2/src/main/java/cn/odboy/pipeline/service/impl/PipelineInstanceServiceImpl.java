@@ -1,7 +1,7 @@
 package cn.odboy.pipeline.service.impl;
 
 import cn.odboy.framework.exception.BadRequestException;
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceNodeTb;
@@ -35,36 +35,36 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
   private PipelineInstanceNodeService pipelineInstanceNodeService;
 
   @Override
-  public void updateInstanceStatus(PipelineStatusEnum pipelineStatusEnum, TaskContext context) {
+  public void updateInstanceStatus(TaskStatusEnum taskStatusEnum, TaskContext context) {
     LambdaUpdateWrapper<PipelineInstanceTb> wrapper = new LambdaUpdateWrapper<>();
     wrapper.eq(PipelineInstanceTb::getId, context.getTaskId());
-    wrapper.set(PipelineInstanceTb::getStatus, pipelineStatusEnum.getCode());
+    wrapper.set(PipelineInstanceTb::getStatus, taskStatusEnum.getCode());
     wrapper.set(PipelineInstanceTb::getContextJson, JSON.toJSONString(context));
     update(wrapper);
   }
 
   @Override
-  public void updateInstanceNodeStatus(PipelineStatusEnum pipelineStatusEnum, TaskOperation operation, TaskContext context, String executeInfo) {
+  public void updateInstanceNodeStatus(TaskStatusEnum taskStatusEnum, TaskOperation operation, TaskContext context, String executeInfo) {
     String code = operation.getClass().getAnnotation(Service.class).value();
 
     LambdaUpdateWrapper<PipelineInstanceTb> wrapper = new LambdaUpdateWrapper<>();
     wrapper.eq(PipelineInstanceTb::getId, context.getTaskId());
     wrapper.set(PipelineInstanceTb::getCurrentNodeCode, code);
-    wrapper.set(PipelineInstanceTb::getCurrentNodeStatus, pipelineStatusEnum.getCode());
+    wrapper.set(PipelineInstanceTb::getCurrentNodeStatus, taskStatusEnum.getCode());
     wrapper.set(PipelineInstanceTb::getContextJson, JSON.toJSONString(context));
     update(wrapper);
 
     LambdaUpdateWrapper<PipelineInstanceNodeTb> wrapper2 = new LambdaUpdateWrapper<>();
     wrapper2.eq(PipelineInstanceNodeTb::getInstanceId, context.getTaskId());
     wrapper2.eq(PipelineInstanceNodeTb::getBizCode, code);
-    wrapper2.set(PipelineInstanceNodeTb::getExecuteStatus, pipelineStatusEnum.getCode());
-    if (PipelineStatusEnum.RUNNING.equals(pipelineStatusEnum)) {
+    wrapper2.set(PipelineInstanceNodeTb::getExecuteStatus, taskStatusEnum.getCode());
+    if (TaskStatusEnum.RUNNING.equals(taskStatusEnum)) {
       wrapper2.set(PipelineInstanceNodeTb::getStartTime, new Date());
       wrapper2.set(PipelineInstanceNodeTb::getExecuteInfo, executeInfo);
       pipelineInstanceNodeService.update(wrapper2);
       return;
     }
-    if (!PipelineStatusEnum.PENDING.equals(pipelineStatusEnum)) {
+    if (!TaskStatusEnum.PENDING.equals(taskStatusEnum)) {
       wrapper2.set(PipelineInstanceNodeTb::getFinishTime, new Date());
       wrapper2.set(PipelineInstanceNodeTb::getExecuteInfo, executeInfo);
       pipelineInstanceNodeService.update(wrapper2);
@@ -83,7 +83,7 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
     pipelineInstance.setContextType(context.getContextType());
     pipelineInstance.setContextName(context.getContextName());
     pipelineInstance.setCurrentNodeCode(currentNodeCode);
-    pipelineInstance.setCurrentNodeStatus(PipelineStatusEnum.PENDING.getCode());
+    pipelineInstance.setCurrentNodeStatus(TaskStatusEnum.PENDING.getCode());
     pipelineInstance.setContextJson(JSON.toJSONString(context.getData()));
     pipelineInstance.setNodeJson(JSON.toJSONString(nodes));
     save(pipelineInstance);
@@ -96,8 +96,8 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
       pipelineInstanceNode.setBizName(node.getName());
       pipelineInstanceNode.setStartTime(null);
       pipelineInstanceNode.setFinishTime(null);
-      pipelineInstanceNode.setExecuteInfo(PipelineStatusEnum.PENDING.getDesc());
-      pipelineInstanceNode.setExecuteStatus(PipelineStatusEnum.PENDING.getCode());
+      pipelineInstanceNode.setExecuteInfo(TaskStatusEnum.PENDING.getMessage());
+      pipelineInstanceNode.setExecuteStatus(TaskStatusEnum.PENDING.getCode());
       nodeTbs.add(pipelineInstanceNode);
     }
     pipelineInstanceNodeService.saveBatch(nodeTbs);
@@ -112,8 +112,8 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
     wrapper.eq(PipelineInstanceTb::getContextName, context.getContextName());
 
     List<String> status = new ArrayList<>();
-    status.add(PipelineStatusEnum.PENDING.getCode());
-    status.add(PipelineStatusEnum.RUNNING.getCode());
+    status.add(TaskStatusEnum.PENDING.getCode());
+    status.add(TaskStatusEnum.RUNNING.getCode());
     wrapper.in(PipelineInstanceTb::getStatus, status);
 
     boolean exists = exists(wrapper);

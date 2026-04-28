@@ -1,5 +1,7 @@
 package cn.odboy.pipeline.core;
 
+import cn.odboy.pipeline.constant.TaskStatusEnum;
+
 /**
  * 任务操作接口 定义单个任务操作的基本行为，支持同步执行和异步等待
  */
@@ -8,7 +10,7 @@ public interface TaskOperation {
   /**
    * 执行任务操作
    *
-   * @param context 任务上下文
+   * @param context    任务上下文
    * @return 执行状态（success/failure/running）
    */
   String execute(TaskContext context);

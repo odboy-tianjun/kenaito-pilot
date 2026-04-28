@@ -1,16 +1,16 @@
-package cn.odboy.pipeline.core;
+package cn.odboy.pipeline.constant;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 任务状态常量接口 定义任务执行过程中可能的状态值
+ * 任务状态 定义任务执行过程中可能的状态值
  */
 @Getter
 @AllArgsConstructor
 public enum TaskStatusEnum {
-
-  RUNNING("running", "任务正在执行中"),
+  PENDING("pending", "任务待执行"),
+  RUNNING("running", "任务执行中"),
   SUCCESS("success", "任务执行成功"),
   FAILURE("failure", "任务执行失败");
 

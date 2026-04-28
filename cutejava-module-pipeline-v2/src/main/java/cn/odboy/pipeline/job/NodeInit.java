@@ -1,6 +1,7 @@
 package cn.odboy.pipeline.job;
 
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
+import cn.odboy.pipeline.core.NodeDefinition;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ public class NodeInit implements TaskOperation {
 
   @Override
   public String execute(TaskContext context) {
-    return PipelineStatusEnum.SUCCESS.getCode();
+    return TaskStatusEnum.SUCCESS.getCode();
   }
 
   @Override

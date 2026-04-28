@@ -1,7 +1,8 @@
 package cn.odboy.pipeline.job;
 
 import cn.hutool.core.thread.ThreadUtil;
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
+import cn.odboy.pipeline.core.NodeDefinition;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import com.alibaba.fastjson2.JSON;
@@ -27,16 +28,16 @@ public class NodeBuildJava implements TaskOperation {
 //    taskEngine.stopJob(context);
 //    log.info("任务停止测试，当前上下文: {}", JSON.toJSONString(context));
 //    throw new BadRequestException("节点异常测试");
-    return PipelineStatusEnum.RUNNING.getCode();
+    return TaskStatusEnum.RUNNING.getCode();
   }
 
   @Override
   public String describe(TaskContext context) {
     boolean isReady = checkServiceStatus(context);
     if (isReady) {
-      return PipelineStatusEnum.SUCCESS.getCode();
+      return TaskStatusEnum.SUCCESS.getCode();
     }
-    return PipelineStatusEnum.RUNNING.getCode();
+    return TaskStatusEnum.RUNNING.getCode();
   }
 
   @Override

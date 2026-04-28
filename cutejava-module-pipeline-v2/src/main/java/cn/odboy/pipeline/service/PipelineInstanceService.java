@@ -1,6 +1,6 @@
 package cn.odboy.pipeline.service;
 
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
@@ -18,9 +18,9 @@ import java.util.List;
  */
 public interface PipelineInstanceService extends IService<PipelineInstanceTb> {
 
-  void updateInstanceStatus(PipelineStatusEnum pipelineStatusEnum, TaskContext context);
+  void updateInstanceStatus(TaskStatusEnum taskStatusEnum, TaskContext context);
 
-  void updateInstanceNodeStatus(PipelineStatusEnum pipelineStatusEnum, TaskOperation operation, TaskContext context, String executeInfo);
+  void updateInstanceNodeStatus(TaskStatusEnum taskStatusEnum, TaskOperation operation, TaskContext context, String executeInfo);
 
   void instanceInitWithNodeList(List<NodeDefinition> nodes, List<TaskOperation> operations, TaskContext context);
 

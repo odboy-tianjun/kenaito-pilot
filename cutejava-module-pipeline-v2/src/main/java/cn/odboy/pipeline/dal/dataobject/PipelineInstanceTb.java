@@ -1,6 +1,6 @@
 package cn.odboy.pipeline.dal.dataobject;
 
-import cn.odboy.pipeline.constant.PipelineStatusEnum;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -95,6 +95,6 @@ public class PipelineInstanceTb {
 
   // 初始化状态
   public PipelineInstanceTb() {
-    this.status = PipelineStatusEnum.PENDING.getCode();
+    this.status = TaskStatusEnum.PENDING.getCode();
   }
 }

@@ -1,7 +1,9 @@
 package cn.odboy.pipeline.core;
 
 import cn.odboy.base.KitObject;
+
 import java.util.Map;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +27,10 @@ public class NodeDefinition extends KitObject {
    */
   private String type;
   /**
+   * 远程调用配置
+   */
+  private RpcConfig rpcConfig;
+  /**
    * 是否可以重试
    */
   private boolean retry;
@@ -32,4 +38,22 @@ public class NodeDefinition extends KitObject {
    * 节点默认参数
    */
   private Map<String, Object> parameters;
+
+  @Getter
+  @Setter
+  public static class RpcConfig extends KitObject {
+
+    /**
+     * 请求类型(Get、Post)
+     */
+    private String requestType;
+    /**
+     * 执行任务请求
+     */
+    private String execute;
+    /**
+     * 查询明细请求
+     */
+    private String describe;
+  }
 }

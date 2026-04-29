@@ -31,6 +31,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * <p>
  * Gitlab站点配置 服务实现类
@@ -93,5 +95,10 @@ public class GitlabSiteConfigServiceImpl extends ServiceImpl<GitlabSiteConfigMap
 
     GitlabSiteConfigTb record = BeanUtil.copyProperties(args, GitlabSiteConfigTb.class);
     updateById(record);
+  }
+
+  @Override
+  public List<GitlabSiteConfigTb> listEnable() {
+    return lambdaQuery().eq(GitlabSiteConfigTb::getStatus, StatusEnum.ENABLED.getCode()).list();
   }
 }

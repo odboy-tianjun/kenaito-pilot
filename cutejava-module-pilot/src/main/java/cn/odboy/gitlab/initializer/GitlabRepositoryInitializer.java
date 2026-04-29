@@ -66,7 +66,7 @@ public class GitlabRepositoryInitializer implements InitializingBean, GitlabRepo
 
   @Override
   public void afterPropertiesSet() {
-    List<GitlabSiteConfigTb> configTbs = gitlabSiteConfigService.list();
+    List<GitlabSiteConfigTb> configTbs = gitlabSiteConfigService.listEnable();
     for (GitlabSiteConfigTb configTb : configTbs) {
       try {
         this.getOneGroup(configTb);

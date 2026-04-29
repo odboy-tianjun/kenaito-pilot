@@ -18,6 +18,8 @@ package cn.odboy.gitlab.service;
 import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  * Gitlab站点配置 服务类
@@ -48,4 +50,7 @@ public interface GitlabSiteConfigService extends IService<GitlabSiteConfigTb> {
    * @param args /
    */
   void updateSiteConfig(GitlabSiteConfigTb.UpdateArgs args);
+
+  List<GitlabSiteConfigTb> listEnable();
+
 }

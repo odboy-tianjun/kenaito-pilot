@@ -18,6 +18,8 @@ package cn.odboy.kubernetes.service;
 import cn.odboy.kubernetes.dal.dataobject.K8sNodeTb;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  * K8s 节点 服务类
@@ -35,5 +37,7 @@ public interface K8sNodeService extends IService<K8sNodeTb> {
    * @return /
    */
   K8sNodeTb getByClusterCode(String clusterCode);
+
+  List<K8sNodeTb> listEnable();
 
 }

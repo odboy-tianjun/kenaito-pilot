@@ -28,11 +28,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 流水线 V2 控制器 职责： 1. 接收 API 请求 2. 参数校验 3. 委托给编排器执行
+ * 流水线
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/pipeline/v2")
+@RequestMapping("/api/pipeline/v4")
 public class PipelineV4Controller {
 
   @Autowired

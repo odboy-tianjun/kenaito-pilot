@@ -65,7 +65,7 @@ public class K8sClientRepositoryInitializer implements InitializingBean, K8sClie
 
   private void scanClients() {
     log.info("[begin]扫描并检测k8s客户端...");
-    List<K8sNodeTb> k8sNodes = k8sNodeService.list();
+    List<K8sNodeTb> k8sNodes = k8sNodeService.listEnable();
     for (K8sNodeTb k8sNode : k8sNodes) {
       try {
         KubernetesClient clusterClient = this.getClient(k8sNode.getClusterCode());

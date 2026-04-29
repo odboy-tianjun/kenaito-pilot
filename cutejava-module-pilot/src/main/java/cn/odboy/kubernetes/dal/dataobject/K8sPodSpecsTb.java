@@ -43,45 +43,45 @@ import java.math.BigDecimal;
 @ApiModel(value = "K8sPodSpecsTb对象", description = "K8s Pod 规格")
 public class K8sPodSpecsTb extends KitBaseUserTimeTb {
 
-    /**
-     * id
-     */
-    @ApiModelProperty("id")
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+  /**
+   * id
+   */
+  @ApiModelProperty("id")
+  @TableId(value = "id", type = IdType.AUTO)
+  private Long id;
 
-    /**
-     * 规格名称
-     */
-    @TableField("`name`")
-    @ApiModelProperty("规格名称")
-    private String name;
+  /**
+   * CPU核心数。毫核m
+   */
+  @TableField("cpu_size")
+  @ApiModelProperty("CPU核心数。毫核m")
+  private BigDecimal cpuSize;
 
-    /**
-     * CPU核心数。毫核m
-     */
-    @TableField("cpu_size")
-    @ApiModelProperty("CPU核心数。毫核m")
-    private BigDecimal cpuSize;
+  /**
+   * 内存数。单位Gi
+   */
+  @TableField("memory_size")
+  @ApiModelProperty("内存数。单位Gi")
+  private Long memorySize;
 
-    /**
-     * 内存数。单位Mi
-     */
-    @TableField("memory_size")
-    @ApiModelProperty("内存数。单位Mi")
-    private Long memorySize;
+  /**
+   * 磁盘容量。单位Gi
+   */
+  @TableField("disk_size")
+  @ApiModelProperty("磁盘容量。单位Gi")
+  private Long diskSize;
 
-    /**
-     * 磁盘容量。单位Mi
-     */
-    @TableField("disk_size")
-    @ApiModelProperty("磁盘容量。单位Mi")
-    private Long diskSize;
+  /**
+   * 备注
+   */
+  @TableField("remark")
+  @ApiModelProperty("备注")
+  private String remark;
 
-    /**
-     * 是否启用
-     */
-    @TableField("`status`")
-    @ApiModelProperty("是否启用")
-    private Boolean status;
+  /**
+   * 是否启用
+   */
+  @TableField("`status`")
+  @ApiModelProperty("是否启用")
+  private Boolean status;
 }

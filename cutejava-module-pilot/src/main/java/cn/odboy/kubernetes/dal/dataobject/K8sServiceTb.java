@@ -50,10 +50,10 @@ public class K8sServiceTb extends KitBaseUserTimeTb {
     private Long id;
 
     /**
-     * Service名称。命名规则：{appName}-svc
+     * Service名称。命名规则：{appName}-{envCode}-svc
      */
     @TableField("`name`")
-    @ApiModelProperty("Service名称。命名规则：{appName}-svc")
+    @ApiModelProperty("Service名称。命名规则：{appName}-{envCode}-svc")
     private String name;
 
     /**

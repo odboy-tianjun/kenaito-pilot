@@ -26,7 +26,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-
 /**
  * <p>
  * K8s Ingress 反向代理
@@ -42,52 +41,59 @@ import lombok.ToString;
 @ApiModel(value = "K8sIngressTb对象", description = "K8s Ingress 反向代理")
 public class K8sIngressTb extends KitBaseUserTimeTb {
 
-    /**
-     * id
-     */
-    @ApiModelProperty("id")
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+  /**
+   * id
+   */
+  @ApiModelProperty("id")
+  @TableId(value = "id", type = IdType.AUTO)
+  private Long id;
 
-    /**
-     * Ingress名称。命名规则：{appName}-ing
-     */
-    @TableField("`name`")
-    @ApiModelProperty("Ingress名称。命名规则：{appName}-ing")
-    private String name;
+  /**
+   * Ingress名称。命名规则：{appName}-{envCode}-ing
+   */
+  @TableField("`name`")
+  @ApiModelProperty("Ingress名称。命名规则：{appName}-{envCode}-ing")
+  private String name;
 
-    /**
-     * 域名
-     */
-    @TableField("`host`")
-    @ApiModelProperty("域名")
-    private String host;
+  /**
+   * Ingress命名空间
+   */
+  @TableField("`namespace`")
+  @ApiModelProperty("Ingress命名空间")
+  private String namespace;
 
-    /**
-     * 匹配路径。默认为'/'
-     */
-    @TableField("`path`")
-    @ApiModelProperty("匹配路径。默认为'/'")
-    private String path;
+  /**
+   * 域名
+   */
+  @TableField("`host`")
+  @ApiModelProperty("域名")
+  private String host;
 
-    /**
-     * Ingress路由规则中的路径类型(Exact、Prefix、ImplementationSpecific
-     */
-    @TableField("path_type")
-    @ApiModelProperty("Ingress路由规则中的路径类型(Exact、Prefix、ImplementationSpecific")
-    private String pathType;
+  /**
+   * 匹配路径。默认为'/'
+   */
+  @TableField("`path`")
+  @ApiModelProperty("匹配路径。默认为'/'")
+  private String path;
 
-    /**
-     * 目标Service
-     */
-    @TableField("service_name")
-    @ApiModelProperty("目标Service")
-    private String serviceName;
+  /**
+   * Ingress路由规则中的路径类型(Exact、Prefix、ImplementationSpecific
+   */
+  @TableField("path_type")
+  @ApiModelProperty("Ingress路由规则中的路径类型(Exact、Prefix、ImplementationSpecific")
+  private String pathType;
 
-    /**
-     * 服务端口。指向Service的应用服务端口
-     */
-    @TableField("service_port")
-    @ApiModelProperty("服务端口。指向Service的应用服务端口")
-    private Integer servicePort;
+  /**
+   * 目标Service
+   */
+  @TableField("service_name")
+  @ApiModelProperty("目标Service")
+  private String serviceName;
+
+  /**
+   * 服务端口。指向Service的应用服务端口
+   */
+  @TableField("service_port")
+  @ApiModelProperty("服务端口。指向Service的应用服务端口")
+  private Integer servicePort;
 }

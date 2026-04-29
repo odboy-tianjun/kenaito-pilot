@@ -56,6 +56,9 @@ public class TaskScheduler {
       String jobName = PipelineNameUtil.getJobName(context);
       JobKey jobKey = new JobKey(jobName, jobGroup);
 
+      // 先设置中断标志（让正在执行的任务能够快速响应）
+      TaskJob.setInterruptFlag(context.getTaskId());
+
       // 尝试中断
       boolean interrupted = scheduler.interrupt(jobKey);
       if (interrupted) {

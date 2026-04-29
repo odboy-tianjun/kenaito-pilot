@@ -29,14 +29,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * <p>
- * Gitlab站点配置 前端控制器
+ * Gitlab 前端控制器
  * </p>
  *
  * @author odboy
  * @since 2026-03-27
  */
 @RestController
-@RequestMapping("/api/gitlabSiteConfig")
+@RequestMapping("/api/gitlab")
 public class GitlabSiteConfigController {
 
   @Autowired

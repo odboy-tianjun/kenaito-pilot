@@ -14,6 +14,16 @@
     <dependencies>
         <dependency>
             <groupId>cn.odboy</groupId>
+            <artifactId>cutejava-module-pipeline-v2</artifactId>
+            <version>1.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.odboy</groupId>
+            <artifactId>cutejava-module-pipeline-v3</artifactId>
+            <version>1.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.odboy</groupId>
             <artifactId>cutejava-module-pipeline-v4</artifactId>
             <version>1.5.2</version>
         </dependency>

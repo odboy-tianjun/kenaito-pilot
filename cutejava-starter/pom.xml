@@ -12,19 +12,9 @@
     <name>启动模块</name>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>cn.odboy</groupId>-->
-<!--            <artifactId>cutejava-module-pipeline-v1</artifactId>-->
-<!--            <version>1.5.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>cn.odboy</groupId>-->
-<!--            <artifactId>cutejava-module-pipeline-v2</artifactId>-->
-<!--            <version>1.5.2</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>cn.odboy</groupId>
-            <artifactId>cutejava-module-pipeline-v3</artifactId>
+            <artifactId>cutejava-module-pipeline-v4</artifactId>
             <version>1.5.2</version>
         </dependency>
 <!--        <dependency>-->

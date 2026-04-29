@@ -42,7 +42,7 @@ spring:
             driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate  # MySQL适配的代理类
             tablePrefix: qrtz_  # Quartz表前缀（需与手动创建的表一致）
             isClustered: true  # 开启集群（分布式必选）
-            clusterCheckinInterval: 10000  # 集群节点心跳间隔（10秒）
+            clusterCheckinInterval: 5000  # 集群节点心跳间隔（5秒）
             misfireThreshold: 60000  # 任务误触发阈值（60秒，超时重新触发）
             useProperties: false  # 序列化JobDataMap为BLOB（true则存储为字符串，需注意数据类型）
             dataSource: jobStoreDataSource  # 关联上面的数据源配置

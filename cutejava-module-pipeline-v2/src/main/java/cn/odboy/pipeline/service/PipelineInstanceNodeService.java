@@ -5,4 +5,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface PipelineInstanceNodeService extends IService<PipelineInstanceNodeTb> {
 
+  void removeByInstanceId(String instanceId);
 }

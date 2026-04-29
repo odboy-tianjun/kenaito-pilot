@@ -9,4 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class PipelineInstanceNodeServiceImpl extends ServiceImpl<PipelineInstanceNodeMapper, PipelineInstanceNodeTb> implements PipelineInstanceNodeService {
 
+  @Override
+  public void removeByInstanceId(String instanceId) {
+    lambdaUpdate().eq(PipelineInstanceNodeTb::getInstanceId, instanceId).remove();
+  }
 }

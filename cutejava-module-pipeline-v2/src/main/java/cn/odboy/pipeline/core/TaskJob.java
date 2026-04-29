@@ -52,7 +52,7 @@ public class TaskJob implements InterruptableJob {
     String retryBizCode = context.getRetryBizCode();
     if (StrUtil.isBlank(retryBizCode)) {
       // 初始化实例和节点
-      pipelineInstanceService.instanceInitWithNodeList(nodes, operations, context);
+      pipelineInstanceService.initInstanceNode(nodes, operations, context);
     }
 
     List<TaskOperation> operationsToExecute = operations;
@@ -84,7 +84,7 @@ public class TaskJob implements InterruptableJob {
     for (TaskOperation operation : operationsToExecute) {
       if (interrupted.get()) {
         log.warn("Job被中断，停止执行，taskId: {}", context.getTaskId());
-        pipelineInstanceService.updateInstanceStatus(TaskStatusEnum.FAILURE, context);
+        pipelineInstanceService.forceCloseInstance(context);
         return;
       }
 
@@ -117,6 +117,7 @@ public class TaskJob implements InterruptableJob {
     for (int i = 0; i < maxRetries; i++) {
       if (interrupted.get()) {
         log.warn("操作执行被中断: {}", operation.name());
+        pipelineInstanceService.forceCloseInstance(context);
         return TaskStatusEnum.FAILURE.getCode();
       }
 
@@ -164,6 +165,7 @@ public class TaskJob implements InterruptableJob {
     while (true) {
       if (interrupted.get()) {
         log.warn("等待异步操作被中断: {}", operation.name());
+        pipelineInstanceService.forceCloseInstance(context);
         return TaskStatusEnum.FAILURE.getCode();
       }
 

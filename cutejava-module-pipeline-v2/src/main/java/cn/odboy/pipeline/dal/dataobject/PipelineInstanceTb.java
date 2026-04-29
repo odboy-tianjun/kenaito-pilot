@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
@@ -92,6 +94,12 @@ public class PipelineInstanceTb {
    */
   @TableField("node_json")
   private String nodeJson;
+
+  /**
+   * 是否强制停止(人为停止任务时为true)
+   */
+  @TableField("force_close")
+  private Boolean forceClose;
 
   // 初始化状态
   public PipelineInstanceTb() {

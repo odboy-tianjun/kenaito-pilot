@@ -1,6 +1,5 @@
 package cn.odboy.pipeline.service.impl;
 
-import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.constant.TaskStatusEnum;
 import cn.odboy.pipeline.core.TaskContext;
 import cn.odboy.pipeline.core.TaskOperation;
@@ -14,9 +13,11 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -72,7 +73,7 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
   }
 
   @Override
-  public void instanceInitWithNodeList(List<NodeDefinition> nodes, List<TaskOperation> operations, TaskContext context) {
+  public void initInstanceNode(List<NodeDefinition> nodes, List<TaskOperation> operations, TaskContext context) {
     TaskOperation operationsFirst = operations.getFirst();
     String currentNodeCode = operationsFirst.getClass().getAnnotation(Service.class).value();
 
@@ -104,21 +105,18 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
   }
 
   @Override
-  public void checkExist(TaskContext context) {
+  public void forceCloseInstance(TaskContext context) {
+    LambdaUpdateWrapper<PipelineInstanceTb> wrapper = new LambdaUpdateWrapper<>();
+    wrapper.eq(PipelineInstanceTb::getId, context.getTaskId());
+    wrapper.set(PipelineInstanceTb::getForceClose, true);
+    update(wrapper);
+  }
+
+  @Override
+  public void listFailure() {
     LambdaQueryWrapper<PipelineInstanceTb> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(PipelineInstanceTb::getClusterType, context.getClusterType());
-    wrapper.eq(PipelineInstanceTb::getClusterCode, context.getClusterCode());
-    wrapper.eq(PipelineInstanceTb::getContextType, context.getContextType());
-    wrapper.eq(PipelineInstanceTb::getContextName, context.getContextName());
-
-    List<String> status = new ArrayList<>();
-    status.add(TaskStatusEnum.PENDING.getCode());
-    status.add(TaskStatusEnum.RUNNING.getCode());
-    wrapper.in(PipelineInstanceTb::getStatus, status);
-
-    boolean exists = exists(wrapper);
-    if (exists) {
-      throw new BadRequestException("已有相同变更执行中");
-    }
+    wrapper.ne(PipelineInstanceTb::getStatus, TaskStatusEnum.SUCCESS.getCode());
+    wrapper.eq(PipelineInstanceTb::getForceClose, false);
+    list(wrapper);
   }
 }

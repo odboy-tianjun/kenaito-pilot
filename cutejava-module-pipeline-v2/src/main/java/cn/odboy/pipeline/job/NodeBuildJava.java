@@ -1,12 +1,15 @@
 package cn.odboy.pipeline.job;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.constant.TaskStatusEnum;
 import cn.odboy.pipeline.core.NodeDefinition;
 import cn.odboy.pipeline.core.TaskContext;
+import cn.odboy.pipeline.core.TaskEngine;
 import cn.odboy.pipeline.core.TaskOperation;
 import com.alibaba.fastjson2.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -51,7 +54,7 @@ public class NodeBuildJava implements TaskOperation {
   }
 
   private boolean checkServiceStatus(TaskContext context) {
-    ThreadUtil.sleep(3000);
+    ThreadUtil.sleep(5000);
     return true;
   }
 }

@@ -2,12 +2,16 @@ package cn.odboy.pipeline.core;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.odboy.framework.exception.BadRequestException;
+import cn.odboy.pipeline.constant.TaskStatusEnum;
 import cn.odboy.pipeline.dal.dataobject.PipelineInstanceTb;
+import cn.odboy.pipeline.service.PipelineInstanceNodeService;
 import cn.odboy.pipeline.service.PipelineInstanceService;
 import cn.odboy.pipeline.util.PipelineNameUtil;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -17,6 +21,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.UnableToInterruptJobException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,12 +30,14 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class TaskEngine {
+public class TaskEngine implements InitializingBean {
 
   @Autowired
   private Scheduler scheduler;
   @Autowired
   private PipelineInstanceService pipelineInstanceService;
+  @Autowired
+  private PipelineInstanceNodeService pipelineInstanceNodeService;
 
   /**
    * 执行任务操作列表 按顺序执行所有操作，如果某个操作失败则立即终止
@@ -50,8 +57,8 @@ public class TaskEngine {
       throw new BadRequestException("任务上下文不能为空");
     }
 
-    // 检查是否有同类型且执行中的
-    pipelineInstanceService.checkExist(context);
+    // 停止同类变更
+    stopLastPipeline(context);
 
     // 任务调度
     try {
@@ -61,6 +68,27 @@ public class TaskEngine {
     } catch (SchedulerException e) {
       log.error("触发流水线Job失败，实例ID: {}", context.getTaskId(), e);
       throw new RuntimeException("触发流水线执行失败", e);
+    }
+  }
+
+  private void stopLastPipeline(TaskContext context) {
+    LambdaQueryWrapper<PipelineInstanceTb> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(PipelineInstanceTb::getClusterType, context.getClusterType());
+    wrapper.eq(PipelineInstanceTb::getClusterCode, context.getClusterCode());
+    wrapper.eq(PipelineInstanceTb::getContextType, context.getContextType());
+    wrapper.eq(PipelineInstanceTb::getContextName, context.getContextName());
+    wrapper.ne(PipelineInstanceTb::getStatus, TaskStatusEnum.SUCCESS.getCode());
+    wrapper.orderByDesc(PipelineInstanceTb::getCreateTime);
+    wrapper.last("LIMIT 1");
+
+    PipelineInstanceTb instanceTb = pipelineInstanceService.getOne(wrapper);
+    if (instanceTb != null) {
+      TaskContext taskContext = JSON.parseObject(instanceTb.getContextJson(), TaskContext.class);
+      if (taskContext != null) {
+        stopJob(taskContext);
+      }
+      pipelineInstanceNodeService.removeByInstanceId(instanceTb.getId());
+      pipelineInstanceService.removeById(instanceTb.getId());
     }
   }
 
@@ -87,7 +115,6 @@ public class TaskEngine {
       throw new RuntimeException("流水线节点 " + retryBizCode + " 重试失败", e);
     }
   }
-
 
   /**
    * 触发Job执行
@@ -169,5 +196,15 @@ public class TaskEngine {
       log.error("停止Job失败，taskId: {}", context.getTaskId(), e);
       throw new RuntimeException("停止任务失败", e);
     }
+  }
+
+  /**
+   * 启动后，扫描是否存在运行中的任务
+   *
+   * @throws Exception
+   */
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    pipelineInstanceService.listFailure();
   }
 }

@@ -194,8 +194,7 @@ app:
   # 序列化白名单
   serial-white-list:
     - "org.springframework"
-    - "cn.odboy.system.dal.dataobject"
-    - "cn.odboy.system.dal.model"
+    - "cn.odboy"
 # debug
 #debug: true
 # 日志配置

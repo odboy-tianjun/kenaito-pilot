@@ -22,15 +22,9 @@ import org.springframework.stereotype.Service;
 @Service("node_build_java")
 public class NodeBuildJava implements TaskOperation {
 
-//  @Autowired
-//  private TaskEngine taskEngine;
-
   @Override
   public String execute(TaskContext context) {
     log.info("执行参数：{}", JSON.toJSONString(context));
-//    taskEngine.stopJob(context);
-//    log.info("任务停止测试，当前上下文: {}", JSON.toJSONString(context));
-//    throw new BadRequestException("节点异常测试");
     return TaskStatusEnum.RUNNING.getCode();
   }
 

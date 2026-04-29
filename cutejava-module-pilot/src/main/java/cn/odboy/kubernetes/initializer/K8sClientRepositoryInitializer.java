@@ -55,7 +55,7 @@ public class K8sClientRepositoryInitializer implements InitializingBean, K8sClie
       taskExecutor.execute(() -> {
         while (true) {
           K8sClientRepositoryInitializer.this.scanClients();
-          ThreadUtil.sleep(5000);
+          ThreadUtil.sleep(10000);
         }
       });
     } else {

@@ -15,6 +15,7 @@
  */
 package cn.odboy.gitlab.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.gitlab.dal.dataobject.GitlabSiteConfigTb;
@@ -22,6 +23,7 @@ import cn.odboy.gitlab.dal.mysql.GitlabSiteConfigMapper;
 import cn.odboy.gitlab.repository.GitlabRepository;
 import cn.odboy.gitlab.service.GitlabSiteConfigService;
 import cn.odboy.meta.constant.StatusEnum;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.gitlab4j.api.models.Group;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,16 +74,24 @@ public class GitlabSiteConfigServiceImpl extends ServiceImpl<GitlabSiteConfigMap
     record.setDefaultGroupId(group.getId());
     record.setStatus(true);
 
-    boolean hasMaster = lambdaQuery().eq(GitlabSiteConfigTb::getMaster, 1).count() > 0;
-    if (!hasMaster) {
-      record.setMaster(true);
-    }
+    boolean hasMaster = lambdaQuery().eq(GitlabSiteConfigTb::getMaster, StatusEnum.ENABLED.getCode()).count() > 0;
+    record.setMaster(!hasMaster);
 
     save(record);
   }
 
   @Override
   public void updateSiteConfig(GitlabSiteConfigTb.UpdateArgs args) {
+    if (args.getMaster()) {
+      LambdaQueryWrapper<GitlabSiteConfigTb> wrapper = new LambdaQueryWrapper<>();
+      wrapper.ne(GitlabSiteConfigTb::getId, args.getId());
+      wrapper.eq(GitlabSiteConfigTb::getMaster, StatusEnum.ENABLED.getCode());
+      if (count(wrapper) > 0) {
+        throw new BadRequestException("已存在master节点，无法将当前节点配置为master");
+      }
+    }
 
+    GitlabSiteConfigTb record = BeanUtil.copyProperties(args, GitlabSiteConfigTb.class);
+    updateById(record);
   }
 }

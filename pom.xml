@@ -12,7 +12,8 @@
         <module>cutejava-framework</module>
         <module>cutejava-module-system</module>
 <!--        <module>cutejava-module-pipeline-v1</module>-->
-        <module>cutejava-module-pipeline-v2</module>
+<!--        <module>cutejava-module-pipeline-v2</module>-->
+        <module>cutejava-module-pipeline-v3</module>
 <!--        <module>cutejava-module-pilot</module>-->
         <module>cutejava-starter</module>
     </modules>

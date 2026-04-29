@@ -113,10 +113,10 @@ public class PipelineInstanceServiceImpl extends ServiceImpl<PipelineInstanceMap
   }
 
   @Override
-  public void listFailure() {
+  public List<PipelineInstanceTb> listFailure() {
     LambdaQueryWrapper<PipelineInstanceTb> wrapper = new LambdaQueryWrapper<>();
     wrapper.ne(PipelineInstanceTb::getStatus, TaskStatusEnum.SUCCESS.getCode());
     wrapper.eq(PipelineInstanceTb::getForceClose, false);
-    list(wrapper);
+    return list(wrapper);
   }
 }

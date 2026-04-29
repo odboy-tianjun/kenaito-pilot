@@ -93,11 +93,7 @@ public class TaskEngine implements InitializingBean {
   }
 
   public TaskResult retry(String instanceId, String retryBizCode) {
-    PipelineInstanceTb pipelineInstance = pipelineInstanceService.getOne(new LambdaQueryWrapper<PipelineInstanceTb>()
-        .eq(PipelineInstanceTb::getId, instanceId)
-        .orderByDesc(PipelineInstanceTb::getUpdateTime)
-        .last("LIMIT 1")
-    );
+    PipelineInstanceTb pipelineInstance = pipelineInstanceService.getById(instanceId);
     if (pipelineInstance == null) {
       throw new BadRequestException("流水线实例不存在");
     }
@@ -205,6 +201,14 @@ public class TaskEngine implements InitializingBean {
    */
   @Override
   public void afterPropertiesSet() throws Exception {
-    pipelineInstanceService.listFailure();
+    List<PipelineInstanceTb> pipelineInstanceTbs = pipelineInstanceService.listFailure();
+    for (PipelineInstanceTb pipelineInstanceTb : pipelineInstanceTbs) {
+      try {
+        retry(pipelineInstanceTb.getId(), pipelineInstanceTb.getCurrentNodeCode());
+        log.error("恢复任务成功, instanceId={}", pipelineInstanceTb.getId());
+      } catch (Exception e) {
+        log.error("恢复任务失败, instanceId={}", pipelineInstanceTb.getId(), e);
+      }
+    }
   }
 }

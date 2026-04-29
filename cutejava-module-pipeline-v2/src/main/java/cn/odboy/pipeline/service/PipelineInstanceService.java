@@ -27,5 +27,5 @@ public interface PipelineInstanceService extends IService<PipelineInstanceTb> {
 
   void forceCloseInstance(TaskContext context);
 
-  void listFailure();
+  List<PipelineInstanceTb> listFailure();
 }

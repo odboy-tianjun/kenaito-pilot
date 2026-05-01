@@ -64,6 +64,13 @@ public class K8sServiceTb extends KitBaseUserTimeTb {
     private String namespace;
 
     /**
+     * 集群编码
+     */
+    @TableField("cluster_code")
+    @ApiModelProperty("集群编码")
+    private String clusterCode;
+
+    /**
      * 适用环境。daily、stage、production
      */
     @TableField("env_code")

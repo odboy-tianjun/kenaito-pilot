@@ -1,11 +1,14 @@
 package cn.odboy.pipeline.v4.job;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.odboy.framework.exception.BadRequestException;
 import cn.odboy.pipeline.v4.constant.TaskStatusEnum;
 import cn.odboy.pipeline.v4.core.TaskContext;
 import cn.odboy.pipeline.v4.core.TaskOperation;
+import cn.odboy.pipeline.v4.core.TaskScheduler;
 import com.alibaba.fastjson2.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,7 +25,7 @@ public class NodeBuildJava implements TaskOperation {
 //  private TaskScheduler taskScheduler;
   // 任务手动停止测试
 //    taskScheduler.stopJob(context);
-
+  //    throw new BadRequestException("模拟执行失败");
   @Override
   public String execute(TaskContext context) {
     log.info("执行参数：{}", JSON.toJSONString(context));

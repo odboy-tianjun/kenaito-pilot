@@ -48,10 +48,10 @@ public class PipelineTemplateTb extends KitBaseUserTimeTb {
   private String pipelineEnv;
 
   /**
-   * 适用类型(front、backend)
+   * 适用类型(static、backend)
    */
   @TableField("pipeline_type")
-  @ApiModelProperty("适用类型(front、backend)")
+  @ApiModelProperty("适用类型(static、backend)")
   private String pipelineType;
 
   /**

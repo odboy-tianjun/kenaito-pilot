@@ -80,11 +80,11 @@ public class TaskEngine {
       }
 
       try {
-        instanceService.updateInstanceNodeStatus(TaskStatusEnum.RUNNING, operation, context, "执行中");
+        instanceService.updateInstanceNodeStatus(TaskStatusEnum.RUNNING, operation, context, TaskStatusEnum.RUNNING.getMessage());
         String status = operation.execute(context);
 
         if (TaskStatusEnum.SUCCESS.getCode().equals(status)) {
-          instanceService.updateInstanceNodeStatus(TaskStatusEnum.SUCCESS, operation, context, "执行成功");
+          instanceService.updateInstanceNodeStatus(TaskStatusEnum.SUCCESS, operation, context, TaskStatusEnum.SUCCESS.getMessage());
           return TaskStatusEnum.SUCCESS.getCode();
         }
 

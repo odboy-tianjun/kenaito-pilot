@@ -31,7 +31,7 @@ spring:
             jobStoreDataSource:
               provider: hikaricp  # 连接池类型（Spring Boot默认HikariCP）
               driver: com.mysql.cj.jdbc.Driver
-              URL: jdbc:mysql://127.0.0.1:3306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+              URL: jdbc:mysql://192.168.235.128:3306/kenaito_pilot?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
               user: root
               password: kd123456789
               maxConnections: 10  # 数据源最大连接数

@@ -65,6 +65,13 @@ public class AppInfoTb extends KitBaseUserTimeTb {
     private String language;
 
     /**
+     * 部署模式
+     */
+    @ApiModelProperty("部署模式")
+    @TableField("`deploy_mode`")
+    private String deployMode;
+
+    /**
      * 状态。0空应用1在线2已下线
      */
     @TableField("`status`")

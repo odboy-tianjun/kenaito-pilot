@@ -65,11 +65,11 @@ public class HostInfoTb extends KitBaseUserTimeTb {
     private String hostIp;
 
     /**
-     * 集群编码
+     * 主机集群id
      */
-    @ApiModelProperty("集群编码")
-    @TableField("cluster_code")
-    private String clusterCode;
+    @ApiModelProperty("主机集群id")
+    @TableField("cluster_id")
+    private Long clusterId;
 
     /**
      * 部署应用类型。比如：java

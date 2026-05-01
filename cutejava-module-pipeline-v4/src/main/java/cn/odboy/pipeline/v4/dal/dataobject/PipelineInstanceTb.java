@@ -41,7 +41,7 @@ public class PipelineInstanceTb {
   private Date updateTime;
 
   /**
-   * 集群类型(host 主机、k8s 容器化)
+   * 集群类型(host主机、k8s容器化)
    */
   @TableField("cluster_type")
   private String clusterType;
@@ -65,7 +65,7 @@ public class PipelineInstanceTb {
   private String contextName;
 
   /**
-   * 流水线状态（参考PipelineStatusEnum） PENDING-待执行 RUNNING-执行中 SUCCESS-执行成功 FAIL-执行失败
+   * 流水线状态（参考PipelineStatusEnum） pending-待执行 running-执行中 success-执行成功 failure-执行失败
    */
   @TableField("status")
   private String status;

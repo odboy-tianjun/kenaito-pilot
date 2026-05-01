@@ -56,11 +56,11 @@ public class HostAppTb extends KitBaseUserCreateTimeTb {
   private Long hostId;
 
   /**
-   * 归属集群
+   * 主机集群id
    */
-  @ApiModelProperty("归属集群")
-  @TableField("cluster_code")
-  private String clusterCode;
+  @ApiModelProperty("主机集群id")
+  @TableField("cluster_id")
+  private Long clusterId;
 
   /**
    * 应用名称

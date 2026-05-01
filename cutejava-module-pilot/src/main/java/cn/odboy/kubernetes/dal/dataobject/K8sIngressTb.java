@@ -63,6 +63,13 @@ public class K8sIngressTb extends KitBaseUserTimeTb {
   private String namespace;
 
   /**
+   * 集群编码
+   */
+  @TableField("`cluster_code`")
+  @ApiModelProperty("集群编码")
+  private String clusterCode;
+
+  /**
    * 域名
    */
   @TableField("`host`")
